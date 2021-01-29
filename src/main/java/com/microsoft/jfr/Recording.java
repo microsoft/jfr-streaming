@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * To create a {@code Recording}, use one of the {@code newRecording} methods
  * in {@link FlightRecorderConnection}.
  * @see FlightRecorderConnection#newRecording(RecordingOptions, RecordingConfiguration)
- * @see <a href="https://docs.oracle.com/en/java/javase/11/docs/api/jdk.jfr/jdk/jfr/Recording.html>jdk.jfr.Recording</a>
+ * @see <a href="https://docs.oracle.com/en/java/javase/11/docs/api/jdk.jfr/jdk/jfr/Recording.html">jdk.jfr.Recording</a>
  */
 public class Recording implements AutoCloseable {
 
