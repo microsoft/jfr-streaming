@@ -39,7 +39,6 @@ import static org.testng.Assert.*;
 public class RecordingTest {
 
     FlightRecorderConnection flightRecorderConnection = null;
-    Set<Path> jfrFilesToSave = new HashSet<>();
 
     @BeforeTest
     public void setup() {
@@ -51,6 +50,8 @@ public class RecordingTest {
         } catch (IOException e) {
             // possible that this can be thrown, but should not happen in this context
             fail("IOException not expected", e);
+        } catch (JfrStreamingException reallyBad) {
+            fail ("something really bad happened", reallyBad);
         }
     }
 
@@ -60,7 +61,6 @@ public class RecordingTest {
             Path userDir = Paths.get(System.getProperty("user.dir"));
             Files.list(userDir)
                     .filter(Files::isRegularFile)
-                    .filter(path -> !jfrFilesToSave.contains(path))
                     .filter(path -> path.toString().endsWith(".jfr"))
                     .forEach(jfrFile -> {
                         try {
@@ -76,7 +76,7 @@ public class RecordingTest {
     }
 
     @Test
-    public void testNewRecording() {
+    public void assertNewRecordingInitialValues() {
         assert flightRecorderConnection != null;
         Recording recording = flightRecorderConnection.newRecording(null, null);
         assertEquals(recording.getState(), Recording.State.NEW);
@@ -85,20 +85,20 @@ public class RecordingTest {
 
 
     @Test
-    public void testRecordingStart() {
+    public void assertRecordingStartIdAndState() {
         assert flightRecorderConnection != null;
         Recording recording = flightRecorderConnection.newRecording(null, null);
         try {
             long id = recording.start();
             assertEquals(recording.getId(), id);
             assertEquals(recording.getState(), Recording.State.RECORDING);
-        } catch (IOException|IllegalStateException| InternalError e) {
-            fail("Recording start threw exception", e);
+        } catch (IOException|IllegalStateException| JfrStreamingException e) {
+            fail("assertRecordingStartIdAndState caught exception", e);
         }
     }
 
     @Test
-    public void testRecordingStop() {
+    public void assertRecordingStopState() {
         assert flightRecorderConnection != null;
         Recording recording = flightRecorderConnection.newRecording(null, null);
         try {
@@ -106,13 +106,13 @@ public class RecordingTest {
             assertEquals(recording.getId(), id);
             recording.stop();
             assertEquals(recording.getState(), Recording.State.STOPPED);
-        } catch (IOException|IllegalStateException| InternalError e) {
-            fail("Recording start threw exception", e);
+        } catch (IOException|IllegalStateException| JfrStreamingException e) {
+            fail("assertRecordingStopState caught exception", e);
         }
     }
 
     @Test
-    public void testRecordingClose() {
+    public void assertRecordingCloseState() {
         assert flightRecorderConnection != null;
         Recording recording = flightRecorderConnection.newRecording(null, null);
         try {
@@ -120,8 +120,8 @@ public class RecordingTest {
             assertEquals(recording.getId(), id);
             recording.close();
             assertEquals(recording.getState(), Recording.State.CLOSED);
-        } catch (IOException|IllegalStateException| InternalError e) {
-            fail("Recording start threw exception", e);
+        } catch (IOException|IllegalStateException| JfrStreamingException e) {
+            fail("assertRecordingCloseState caught exception", e);
         }
     }
 
@@ -186,7 +186,7 @@ public class RecordingTest {
     };
 
     @Test(dataProvider = "validStateChanges")
-    public void testValidStateChanges(Object[] args) {
+    public void assertValidStateChangeNoException(Object[] args) {
         assert flightRecorderConnection != null;
         Recording recording = flightRecorderConnection.newRecording(null, null);
         try {
@@ -215,7 +215,7 @@ public class RecordingTest {
     };
 
     @Test(dataProvider = "invalidStateChanges", expectedExceptions = {IllegalStateException.class})
-    public void testInvalidStateChanges(Object[] args) {
+    public void assertInvalidStateChangeThrowsIllegalStateException(Object[] args) {
         assert flightRecorderConnection != null;
         Recording recording = flightRecorderConnection.newRecording(null, null);
         try {
@@ -241,8 +241,9 @@ public class RecordingTest {
                 {"name=test", "maxAge=30 s", "maxSize=1048576","dumpOnExit=true","destination=temp.jfr","disk=true","duration=30 s"},
         };
     }
+
     @Test(dataProvider = "options")
-    public void testRecordingOptions(String[] options) {
+    public void assertRecordingOptionsAreSetInFlightRecorderMXBean(String[] options) {
         try {
             MBeanServerConnection mBeanServer = ManagementFactory.getPlatformMBeanServer();
             ObjectName flightRecorder = new ObjectName("jdk.management.jfr:type=FlightRecorder");
@@ -289,7 +290,7 @@ public class RecordingTest {
         } catch (IOException ioe) {
             // possible that this can be thrown, but should not happen in this context
             fail("IOException not expected: ", ioe);
-        } catch (InternalError | ReflectionException| MBeanException badBean) {
+        } catch (JfrStreamingException | ReflectionException| MBeanException badBean) {
             fail("Error thrown by MBean server or FlightRecorderMXBean: ", badBean);
         } catch (MalformedObjectNameException badTest) {
             fail("Error internal to the test: ", badTest);
@@ -314,9 +315,10 @@ public class RecordingTest {
     }
 
     @Test
-    public void testRecordingDump() {
+    public void assertFileExistsAfterRecordingDump() {
+        Path dumpFile = null;
         try {
-            final Path dumpFile = Paths.get(System.getProperty("user.dir"),"testRecordingDump_dumped.jfr");
+            dumpFile = Paths.get(System.getProperty("user.dir"),"testRecordingDump_dumped.jfr");
             Files.deleteIfExists(dumpFile);
 
             RecordingOptions recordingOptions = new RecordingOptions.Builder().disk("true").build();
@@ -335,18 +337,70 @@ public class RecordingTest {
         } catch (IOException ioe) {
             // possible that this can be thrown, but should not happen in this context
             fail("IOException not expected: ", ioe);
-        } catch (InternalError badBean) {
+        } catch (JfrStreamingException badBean) {
             fail("Error thrown by MBean server or FlightRecorderMXBean: ", badBean);
+        } finally {
+            if (dumpFile != null) {
+                try {
+                    Files.deleteIfExists(dumpFile);
+                } catch (IOException ignore) {
+                }
+            }
         }
     }
 
     @Test
-    public void testRecordingStream() {
+    public void assertFileExistsAfterRecordingStream() {
+        Path streamedFile = null;
         try {
-            final Path streamedFile = Paths.get(System.getProperty("user.dir"),"testRecordingStream_getStream.jfr");
-            final Path dumpedFile = Paths.get(System.getProperty("user.dir"),"testRecordingStream_dumped.jfr");
+            streamedFile = Paths.get(System.getProperty("user.dir"),"testRecordingStream_getStream.jfr");
             Files.deleteIfExists(streamedFile);
-            Files.deleteIfExists(dumpedFile);
+
+            RecordingOptions recordingOptions = new RecordingOptions.Builder().disk("true").build();
+            Recording recording = flightRecorderConnection.newRecording(recordingOptions, null);
+            long id = recording.start();
+            Instant now = Instant.now();
+            Instant then = now.plusSeconds(1);
+            while (Instant.now().compareTo(then) < 0) {
+                fib(Short.MAX_VALUE); // do something
+            }
+            recording.stop();
+
+            try (InputStream inputStream = recording.getStream(now, then); // get the whole thing.
+                 OutputStream outputStream = new FileOutputStream(streamedFile.toFile())) {
+                int c = -1;
+                while ((c = inputStream.read()) != -1) outputStream.write(c);
+            } catch (IOException e) {
+                fail(e.getMessage(), e);
+            }
+
+            assertTrue(Files.exists(streamedFile));
+
+        } catch (IllegalArgumentException badData) {
+            fail("Issue in test data: " + badData.getMessage());
+        } catch (IOException ioe) {
+            // possible that this can be thrown, but should not happen in this context
+            fail("IOException not expected: ", ioe);
+        } catch (JfrStreamingException badBean) {
+            fail("Error thrown by MBean server or FlightRecorderMXBean: ", badBean);
+        } finally {
+            if (streamedFile != null) {
+                try {
+                    Files.deleteIfExists(streamedFile);
+                } catch (IOException ignore) {
+                }
+            }
+        }
+    }
+
+    @Test
+    public void assertStreamedFileEqualsDumpedFile() {
+        Path streamedFile = null;
+        Path dumpedFile = null;
+        try {
+            streamedFile = Paths.get(System.getProperty("user.dir"),"testRecordingStream_getStream.jfr");
+            dumpedFile = Paths.get(System.getProperty("user.dir"),"testRecordingStream_dumped.jfr");
+            Files.deleteIfExists(streamedFile);
 
             RecordingOptions recordingOptions = new RecordingOptions.Builder().disk("true").build();
             Recording recording = flightRecorderConnection.newRecording(recordingOptions, null);
@@ -365,9 +419,7 @@ public class RecordingTest {
             } catch (IOException e) {
                 fail(e.getMessage(), e);
             }
-            // save these in case this test fails so we can do the diff.
-            jfrFilesToSave.add(streamedFile);
-            jfrFilesToSave.add(dumpedFile);
+
             try (InputStream streamed = new FileInputStream(streamedFile.toFile());
                  InputStream dumped = new FileInputStream(dumpedFile.toFile())) {
                 int a = -1;
@@ -381,21 +433,22 @@ public class RecordingTest {
                 fail(e.getMessage(), e);
             }
             // if we get here, then the files compare the same and there is no need to save them
-            jfrFilesToSave.remove(dumpedFile);
-            jfrFilesToSave.remove(streamedFile);
+            Files.deleteIfExists(dumpedFile);
+            Files.deleteIfExists(streamedFile);
         } catch (IllegalArgumentException badData) {
             fail("Issue in test data: " + badData.getMessage());
         } catch (IOException ioe) {
             // possible that this can be thrown, but should not happen in this context
             fail("IOException not expected: ", ioe);
-        } catch (InternalError badBean) {
+        } catch (JfrStreamingException badBean) {
             fail("Error thrown by MBean server or FlightRecorderMXBean: ", badBean);
         }
     }
 
     @Test
-    public void testRecordingClone() {
-
+    public void assertRecordingCloneState() {
+        // Recording#clone returns a clone of the recording with the same state, but clone has its own id.
+        // Recording#clone with 'true' causes clone to close before returning.
         try {
 
             RecordingOptions recordingOptions = new RecordingOptions.Builder().disk("true").build();
@@ -410,7 +463,7 @@ public class RecordingTest {
         } catch (IOException ioe) {
             // possible that this can be thrown, but should not happen in this context
             fail("IOException not expected: ", ioe);
-        } catch (InternalError badBean) {
+        } catch (JfrStreamingException badBean) {
             fail("Error thrown by MBean server or FlightRecorderMXBean: ", badBean);
         }
     }

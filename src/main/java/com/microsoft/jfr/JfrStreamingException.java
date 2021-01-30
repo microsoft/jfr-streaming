@@ -3,12 +3,11 @@ package com.microsoft.jfr;
 import javax.management.JMException;
 
 /**
- * An InternalError is a wrapper around specific {@code javax.management.JMException}
+ * An JfrStreamingException is a wrapper around specific {@code javax.management.JMException}
  * instances which might be thrown, either directly or indirectly, by methods of this package.
- * Exceptions of this type are not expected from a well behaved JVM. This class is
- * a subclass of {@code java.lang.Error} and may be treated as an unchecked exception.
+ * Exceptions of this type are not expected from a well behaved JVM.
  *
- * The cause of an {@code InternalError} will be one of the following:
+ * The cause of an {@code JfrStreamingException} will be one of the following:
  * <dl>
  *     <dt><em>javax.management.InstanceNotFoundException</em></dt>
  *     <dd>The FlightRecorderMXBean is not found on the MBean server. This could happen
@@ -32,9 +31,9 @@ import javax.management.JMException;
  *     were not met. This cause indicates a bug in the com.microsoft.censum.jfr package code.</dd>
  * </dl>
  */
-public class InternalError extends Error {
+public class JfrStreamingException extends Exception {
 
-    InternalError(String message, JMException cause) {
+    JfrStreamingException(String message, JMException cause) {
         super(message, cause);
     }
 

@@ -20,7 +20,15 @@ public class Recording implements AutoCloseable {
 
     /**
      * A {@code Recording} may be in one of these states. Note that a {@code Recording} is
-     * no longer usable once it is in the {@code CLOSED} state.
+     * no longer usable once it is in the {@code CLOSED} state. Valid state transitions are
+     * <code>
+     *     NEW -> [RECORDING, STOPPED, CLOSED]
+     *     RECORDING -> [RECORDING, STOPPED, CLOSED]
+     *     STOPPED -> [RECORDING, STOPPED, CLOSED]
+     *     CLOSED -> [CLOSED]
+     * </code>
+     * Calling a method on {@code Recording} that would cause an invalid transition
+     * will raise an IllegalStateException.
      */
     public enum State {
         /**
@@ -43,7 +51,17 @@ public class Recording implements AutoCloseable {
     }
 
     // Format for IllegalStateException that this class might throw
+    // {0} is the state the code is trying to transition to.
+    // {1} are the states that the instance could be in for a valid transition.
     private final static MessageFormat illegalStateFormat = new MessageFormat("Recording state {0} not in [{1}]");
+
+    /**
+     * Helper for formatting the message for an IllegalStateException that may be thrown by methods of this class.
+     * @param actual This is the state that the Recording is in currently
+     * @param expected This is the state that the Recording should be in for a valid transition to occur
+     * @param others Additional <em>expected</em> states
+     * @return
+     */
     private static String createIllegalStateExceptionMessage(State actual, State expected, State... others) {
         String[] args = new String[]{actual.name(), expected.name()};
         if (others != null) {
@@ -67,7 +85,7 @@ public class Recording implements AutoCloseable {
      * @param recordingOptions The options to be used for the recording
      * @param recordingConfiguration The settings for events to be collected by the recording
      */
-    /*package*/ Recording(
+    /* package-scoped */ Recording(
             FlightRecorderConnection connection,
             RecordingOptions recordingOptions,
             RecordingConfiguration recordingConfiguration) {
@@ -81,7 +99,7 @@ public class Recording implements AutoCloseable {
      * Get the recording id. The recording does not have an id until the recording is started.
      * @return The recording id, or {@code -1} if the recording was never started.
      */
-    public long getId() throws IllegalStateException {
+    public long getId()  {
         return id;
     }
 
@@ -89,11 +107,11 @@ public class Recording implements AutoCloseable {
      * Start a recording. A recording may not be started after it is closed.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException This {@code Recording} is closed.
-     * @throws InternalError Wraps a {@code javax.management.JMException}. See {@link InternalError}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
      * @return The recording id. 
      */
-    public long start() throws IOException, IllegalStateException {
-        // state machine transitions: NEW -> RECORDING or STOPPED -> RECORDING, otherwise remain in state
+    public long start() throws IOException, IllegalStateException, JfrStreamingException {
+        // state transitions: NEW -> RECORDING or STOPPED -> RECORDING, otherwise remain in state
         State oldState = state.getAndUpdate(s -> s == State.NEW || s == State.STOPPED ? State.RECORDING : s);
 
         if (oldState == State.NEW || oldState == State.STOPPED) {
@@ -108,10 +126,10 @@ public class Recording implements AutoCloseable {
      * Stop a recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException If the {@code Recording} is closed.
-     * @throws InternalError Wraps a {@code javax.management.JMException}. See {@link InternalError}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
      */
-    public void stop() throws IOException, IllegalStateException {
-        // state machine transitions:  RECORDING -> STOPPED, otherwise remain in state
+    public void stop() throws IOException, IllegalStateException, JfrStreamingException {
+        // state transitions:  RECORDING -> STOPPED, otherwise remain in state
         State oldState = state.getAndUpdate(s -> s == State.RECORDING ? State.STOPPED : s);
         if (oldState == State.RECORDING) {
             connection.stopRecording(id);
@@ -126,10 +144,10 @@ public class Recording implements AutoCloseable {
      * @param outputFile the system-dependent file name where data is written, not {@code null}
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException If the {@code Recording} has not been started, or has been closed.
-     * @throws InternalError Wraps a {@code javax.management.JMException}. See {@link InternalError}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
      * @throws NullPointerException If the {@code outputFile} argument is null.
      */
-    public void dump(String outputFile) throws IOException, IllegalStateException {
+    public void dump(String outputFile) throws IOException, IllegalStateException, JfrStreamingException {
         Objects.requireNonNull(outputFile, "outputFile may not be null");
         State currentState = state.get();
         if (currentState == State.RECORDING || currentState == State.STOPPED) {
@@ -147,9 +165,9 @@ public class Recording implements AutoCloseable {
      * @return The cloned recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException If the {@code Recording} has not been started, or has been closed.
-     * @throws InternalError Wraps a {@code javax.management.JMException}. See {@link InternalError}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
      */
-    public Recording clone(boolean stop) throws IOException {
+    public Recording clone(boolean stop) throws IOException, JfrStreamingException {
         State currentState = state.get();
         if (currentState == State.RECORDING || currentState == State.STOPPED) {
             long newId = connection.cloneRecording(id, stop);
@@ -170,10 +188,11 @@ public class Recording implements AutoCloseable {
      * @return An {@code InputStream}, or {@code null} if no data is available in the interval.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException If the {@code Recording} has not been stopped.
-     * @throws InternalError Wraps a {@code javax.management.JMException}. See {@link InternalError}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
      * @see JfrStream#getDefaultBlockSize()
      */
-    public InputStream getStream(Instant startTime, Instant endTime) throws IOException, IllegalStateException {
+    public InputStream getStream(Instant startTime, Instant endTime)
+            throws IOException, IllegalStateException, JfrStreamingException {
         return getStream(startTime, endTime, JfrStream.getDefaultBlockSize());
     }
 
@@ -190,11 +209,11 @@ public class Recording implements AutoCloseable {
      * @return An {@code InputStream}, or {@code null} if no data is available in the interval.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException If the {@code Recording} has not been stopped.
-     * @throws InternalError Wraps a {@code javax.management.JMException}. See {@link InternalError}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
      */
     public InputStream getStream(Instant startTime, Instant endTime, long blockSize)
-            throws IOException, IllegalStateException {
-        // state machine transitions: remain in state
+            throws IOException, IllegalStateException, JfrStreamingException {
+        // state transitions: remain in state
         State currentState = state.get();
         if (currentState == State.STOPPED) {
             return connection.getStream(id, startTime, endTime, blockSize);
@@ -213,7 +232,7 @@ public class Recording implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        // state machine transitions:  any -> CLOSED
+        // state transitions:  any -> CLOSED
         State oldState = state.getAndSet(State.CLOSED);
         if (oldState == State.RECORDING) {
             try {
