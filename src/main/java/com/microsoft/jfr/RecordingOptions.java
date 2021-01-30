@@ -18,6 +18,22 @@ import java.util.stream.Stream;
  * {@link FlightRecorderConnection#newRecording(RecordingOptions, RecordingConfiguration)}. A {@code Configuration}
  * is immutable which prevents attempts at changing the configuration while a recording
  * is in progress.
+ *
+ * <b>A note on the API</b>
+ * It is enticing to want the Builder to take a {@code java.time.Duration} instead of a String for
+ * the {@code maxAge} or {@code duration} API, or have the {@code maxAge} API take a long, or pass
+ * a boolean for the others. The problem with this is twofold. First, it makes it difficult for the user of
+ * the library to set values through system properties since the String value has to be converted. This is
+ * not really an issue for a long or boolean arg, but it adds a lot of code for handling a Duration. And
+ * it makes it difficult to document what value a user should provide for a system property. These are not
+ * insurmountable problems. But they do add error-prone complexity. Secondly, the arguments to
+ * FlightRecorderMXBean are String, so there would need to be a conversion from the Duration/boolean/long to
+ * a String anyway. And then what API would you have for Recording? If Recording#getDuration returns a
+ * Duration and this is called from the underlying code, then the underlying code has to do the conversion
+ * and this creates a tight coupling between Recording and the underlying code. If Builder takes a Duration
+ * and Recording returns a String, then the two APIs are not parallel (violates the rule of least surprise).
+ * Sticking to a String based API resolves these issues. But it does mean that the Builder needs to validate
+ * the args and potentially throw IllegalArgumentException. String makes the overall code so much simpler.
  */
 public class RecordingOptions {
 
@@ -35,7 +51,7 @@ public class RecordingOptions {
         DISK("disk", "false"),
         DURATION("duration", NO_LIMIT);
 
-        private Option(String name, String defaultValue) {
+        Option(String name, String defaultValue) {
             this.name = name;
             this.defaultValue = defaultValue;
         }
@@ -43,22 +59,20 @@ public class RecordingOptions {
         private final String defaultValue; /* not null! */
     }
 
+    /* If the arg is null or an empty String, return the Option's default. */
+    private static String normalize(String arg, Option option) {
+        return arg == null || (arg = arg.trim()).isEmpty() ? option.defaultValue : arg;
+    }
+
     /**
-     * Builder for {@link RecordingOptions}.
+     * Builder for {@link RecordingOptions}. The builder builds up a hash table of options.
+     * These options correspond to the recording options for a
+     * {@code jdk.management.jfr.FlightRecorderMXBean}.
      */
     public static class Builder {
 
-        // The builder builds up a hash table of options. These options
-        // correspond to the recording options for a FlightRecorderMXBean
-        // Even though the input to the builder methods are not all String,
-        // the option value is converted to a String. This simplifies
-        // the code in the RecordingOption constructor, but makes the
-        // RecordingOption getter methods a bit strange since they have to
-        // covert from the String back to the raw value. The getter methods
-        // could return String, but then you have the builder taking one type
-        // and the getter returning a different type, which would be surprising.
         private final Map<Option, String> options = new HashMap<>();
-        
+
         /**
          * Constructor for a {@code Builder}.
          */
@@ -75,7 +89,7 @@ public class RecordingOptions {
         public Builder name(String name) {
             options.put(
                     Option.NAME, 
-                    name != null ? name.trim() : Option.NAME.defaultValue
+                    normalize(name,Option.NAME)
             );
             return this;
         }
@@ -125,7 +139,7 @@ public class RecordingOptions {
         public Builder maxSize(String maxSize) throws IllegalArgumentException {
             long value = 0L;
             try {
-                String numVal = maxSize == null || maxSize.trim().length() == 0 ? Option.MAX_SIZE.defaultValue : maxSize.trim();
+                String numVal = normalize(maxSize, Option.MAX_SIZE);
                 value = Long.parseLong(numVal);
                 if (value < 0L) {
                     throw new IllegalArgumentException("maxSize: " + value + " < 0");
@@ -169,9 +183,7 @@ public class RecordingOptions {
         public Builder destination(String destination) {
             options.put(
                     Option.DESTINATION,
-                    destination != null 
-                            ? destination.trim()
-                            : Option.DESTINATION.defaultValue
+                    normalize(destination,Option.DESTINATION)
             );
             return this;
         }
@@ -186,7 +198,7 @@ public class RecordingOptions {
         public Builder disk(String disk) {
             options.put(
                     Option.DISK, 
-                    Boolean.valueOf(disk).toString()
+                    Boolean.valueOf(normalize(disk, Option.DISK)).toString()
             );
             return this;
         }
@@ -239,8 +251,10 @@ public class RecordingOptions {
      * @param builder The builder that was used to parameterize the configuration
      */
     private RecordingOptions(Builder builder) {
+
         // Note we're converting from Map<Option<?>,String> to Map<String,String>
         final Map<Option,String> options = builder.options;
+
         //
         // For each option,
         //    if the option is not the default value
@@ -330,7 +344,7 @@ public class RecordingOptions {
      * according to FlightRecorderMXBean.
      * @return A read-only map of the recording options.
      */
-    /*package*/ Map<String,String> getRecordingOptions() {
+    /* package-scoped */  Map<String,String> getRecordingOptions() {
         return recordingOptions;
     }
 
@@ -340,30 +354,30 @@ public class RecordingOptions {
     private final Map<String,String> recordingOptions;
 
     // format for FlightRecorderMXBean maxAge and duration recording options
-    private static final Pattern pattern = Pattern.compile("([-+]?\\d+)\\s*(\\w*)");
+    private static final Pattern durationPattern = Pattern.compile("([-+]?\\d+)\\s*(\\w*)");
 
     // If the durationString arg is a valid format, return the arg properly formatted for FlightRecorderMXBean.
     // The expected format is a positive number, followed by a space (optional),
     // followed by the units (one of ns, us, ms, s, m, h, d).
     private static String validateDuration(Option option, String durationString) throws IllegalArgumentException {
 
-        if (durationString == null || durationString.trim().length() == 0) {
+        if (durationString == null || durationString.trim().isEmpty()) {
             return option.defaultValue;
         }
 
-        Matcher matcher = pattern.matcher(durationString);
-        if (matcher.matches()) {
+        Matcher durationStringMatcher = durationPattern.matcher(durationString);
+        if (durationStringMatcher.matches()) {
 
             final long value;
             try {
-                value = Long.parseLong(matcher.group(1));
+                value = Long.parseLong(durationStringMatcher.group(1));
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException(e);
             }
 
             if (value >= 0L) {
 
-                final String units = matcher.group(2);
+                final String units = durationStringMatcher.group(2);
                 switch (units) {
                     case "":
                         return Long.toString(value);

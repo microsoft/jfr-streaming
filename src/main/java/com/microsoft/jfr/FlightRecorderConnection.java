@@ -60,12 +60,12 @@ public class FlightRecorderConnection {
      * @return A {@code FlightRecorderConnection}.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws InstanceNotFoundException The FlightRecorder MBean is not registered on the target JVM.
-     * @throws java.lang.InternalError Wraps a {@code javax.management.MalformedObjectNameException}
+     * @throws JfrStreamingException Wraps a {@code javax.management.MalformedObjectNameException}
      * and indicates a bug in this class.
      * @throws NullPointerException The {@code mBeanServerConnection} parameter is {@code null}.
      */
     public static FlightRecorderConnection connect(MBeanServerConnection mBeanServerConnection)
-            throws IOException, InstanceNotFoundException
+            throws IOException, InstanceNotFoundException, JfrStreamingException
     {
         Objects.requireNonNull(mBeanServerConnection);
         try {
@@ -75,7 +75,7 @@ public class FlightRecorderConnection {
         } catch (MalformedObjectNameException e) {
             // Not expected to happen. This exception comes from the ObjectName constructor. If
             // JFR_OBJECT_NAME is malformed, then this is an internal bug.
-            throw new InternalError(JFR_OBJECT_NAME, e);
+            throw new JfrStreamingException(JFR_OBJECT_NAME, e);
         }
     }
 
@@ -102,32 +102,26 @@ public class FlightRecorderConnection {
      *                          the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method
      * @return The id of the recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
-     * @throws java.lang.InternalError Wraps an {@code javax.management.InstanceNotFoundException},
+     * @throws JfrStreamingException Wraps an {@code javax.management.InstanceNotFoundException},
      * a {@code javax.management.MBeanException} or a {@code javax.management.ReflectionException}
      * and indicates an issue with the FlightRecorderMXBean in the JVM.
      * The cause may also be a {@code javax.management.openmbean.OpenDataException}
      * which indicates a bug in the code of this class.
      */
-    long startRecording(RecordingOptions recordingOptions, RecordingConfiguration recordingConfiguration)
-            throws IOException {
+    /* package-scoped */ long startRecording(RecordingOptions recordingOptions, RecordingConfiguration recordingConfiguration)
+            throws IOException, JfrStreamingException {
 
         try {
-            final long id = (long) connection.invoke(
-                    flightRecorder,
-                    "newRecording",
-                    new Object[]{},
-                    new String[]{}
-            );
+            Object[] args = new Object[]{};
+            String[] argTypes = new String[]{};
+            final long id = (long) connection.invoke(flightRecorder, "newRecording", args, argTypes);
 
             if (recordingConfiguration != null) {
                 String predefinedConfiguration = recordingConfiguration.getName();
                 if (predefinedConfiguration != null && predefinedConfiguration.trim().length() > 0) {
-                    connection.invoke(
-                            flightRecorder,
-                            "setPredefinedConfiguration",
-                            new Object[]{id, predefinedConfiguration},
-                            new String[]{long.class.getName(), String.class.getName()}
-                    );
+                    args = new Object[]{id, predefinedConfiguration};
+                    argTypes = new String[]{long.class.getName(), String.class.getName()};
+                    connection.invoke(flightRecorder, "setPredefinedConfiguration", args, argTypes);
                 }
             }
 
@@ -135,26 +129,20 @@ public class FlightRecorderConnection {
                 Map<String,String> options = recordingOptions.getRecordingOptions();
                 if (options != null && !options.isEmpty()) {
                     TabularData recordingOptionsParam = makeOpenData(options);
-                    connection.invoke(
-                            flightRecorder,
-                            "setRecordingOptions",
-                            new Object[]{id, recordingOptionsParam},
-                            new String[]{long.class.getName(), TabularData.class.getName()}
-                    );
+                    args = new Object[]{id, recordingOptionsParam};
+                    argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
+                    connection.invoke(flightRecorder, "setRecordingOptions", args, argTypes);
                 }
             }
 
-            connection.invoke(
-                    flightRecorder,
-                    "startRecording",
-                    new Object[]{id},
-                    new String[]{long.class.getName()}
-            );
+            args = new Object[]{id};
+            argTypes = new String[]{long.class.getName()};
+            connection.invoke(flightRecorder, "startRecording", args, argTypes);
 
             return id;
         } catch (OpenDataException|InstanceNotFoundException|MBeanException|ReflectionException e) {
             // In theory, we should never get these.
-            throw new InternalError(e.getMessage(), e);
+            throw new JfrStreamingException(e.getMessage(), e);
         }
     }
 
@@ -162,15 +150,17 @@ public class FlightRecorderConnection {
      * Stop a recording. This method is called from the {@link Recording#stop()} method.
      * @param id The id of the recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
-     * @throws java.lang.InternalError Wraps an {@code javax.management.InstanceNotFoundException},
+     * @throws JfrStreamingException Wraps an {@code javax.management.InstanceNotFoundException},
      * a {@code javax.management.MBeanException} or a {@code javax.management.ReflectionException}
      * and indicates an issue with the FlightRecorderMXBean in the JVM.
      */
-    void stopRecording(long id) throws IOException {
+    /* package-scoped */ void stopRecording(long id) throws IOException, JfrStreamingException {
         try {
-            connection.invoke(flightRecorder, "stopRecording", new Object[]{id}, new String[]{long.class.getName()});
+            Object[] args = new Object[]{id};
+            String[] argTypes = new String[]{long.class.getName()};
+            connection.invoke(flightRecorder, "stopRecording", args, argTypes);
         } catch (InstanceNotFoundException|MBeanException|ReflectionException e) {
-            throw new InternalError(e.getMessage(), e);
+            throw new JfrStreamingException(e.getMessage(), e);
         }
     }
 
@@ -180,13 +170,15 @@ public class FlightRecorderConnection {
      * @param id The id of the recording.
      * @param outputFile the system-dependent file name where data is written, not {@code null}
      * @throws IOException A communication problem occurred when talking to the MBean server.
-     * @throws InternalError Wraps a {@code javax.management.JMException}. See {@link InternalError}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
      */
-    void dumpRecording(long id, String outputFile) throws IOException {
+    /* package-scoped */ void dumpRecording(long id, String outputFile) throws IOException, JfrStreamingException {
         try {
-            connection.invoke(flightRecorder, "copyTo", new Object[]{id,outputFile}, new String[]{long.class.getName(),String.class.getName()});
+            Object[] args = new Object[]{id,outputFile};
+            String[] argTypes =  new String[]{long.class.getName(),String.class.getName()};
+            connection.invoke(flightRecorder, "copyTo", args, argTypes);
         } catch (InstanceNotFoundException|MBeanException|ReflectionException e) {
-            throw new InternalError(e.getMessage(), e);
+            throw new JfrStreamingException(e.getMessage(), e);
         }
     }
 
@@ -197,13 +189,15 @@ public class FlightRecorderConnection {
      * @param id The id of the recording being cloned.
      * @param stop Whether to stop the cloned recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
-     * @throws InternalError Wraps a {@code javax.management.JMException}. See {@link InternalError}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
      */
-    long cloneRecording(long id, boolean stop) throws IOException {
+    /* package-scoped */ long cloneRecording(long id, boolean stop) throws IOException, JfrStreamingException {
         try {
-            return (long)connection.invoke(flightRecorder, "cloneRecording", new Object[]{id,stop}, new String[]{long.class.getName(),boolean.class.getName()});
+            Object[] args = new Object[]{id,stop};
+            String[] argTypes =  new String[]{long.class.getName(),boolean.class.getName()};
+            return (long)connection.invoke(flightRecorder, "cloneRecording", args, argTypes);
         } catch (InstanceNotFoundException|MBeanException|ReflectionException e) {
-            throw new InternalError(e.getMessage(), e);
+            throw new JfrStreamingException(e.getMessage(), e);
         }
     }
 
@@ -227,14 +221,14 @@ public class FlightRecorderConnection {
      * @param blockSize The number of bytes to read at a time.
      * @return A {@code InputStream} of the Java Flight Recording data.
      * @throws IOException A communication problem occurred when talking to the MBean server.
-     * @throws InternalError Wraps an {@code javax.management.InstanceNotFoundException},
+     * @throws JfrStreamingException Wraps an {@code javax.management.InstanceNotFoundException},
      * a {@code javax.management.MBeanException} or a {@code javax.management.ReflectionException}
      * and indicates an issue with the FlightRecorderMXBean in the JVM.
      * The cause may also be a {@code javax.management.openmbean.OpenDataException}
      * which indicates a bug in the code of this class.
      */
-    InputStream getStream(long id, Instant startTime, Instant endTime, long blockSize)
-            throws IOException {
+    /* package-scoped */ InputStream getStream(long id, Instant startTime, Instant endTime, long blockSize)
+            throws IOException, JfrStreamingException {
         Map<String,String> options = new HashMap<>();
         if (startTime != null) options.put("startTime", startTime.toString());
         if (endTime != null)   options.put("endTime",   endTime.toString());
@@ -242,10 +236,12 @@ public class FlightRecorderConnection {
 
         try {
             TabularData streamOptions = makeOpenData(options);
-            long streamId = (long) connection.invoke(flightRecorder, "openStream", new Object[]{id, streamOptions}, new String[]{long.class.getName(), TabularData.class.getName()});
+            Object[] args = new Object[]{id, streamOptions};
+            String[] argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
+            long streamId = (long) connection.invoke(flightRecorder, "openStream", args, argTypes);
             return new JfrStream(connection, flightRecorder, streamId);
         } catch(OpenDataException|InstanceNotFoundException|MBeanException|ReflectionException e) {
-            throw new InternalError(e.getMessage(), e);
+            throw new JfrStreamingException(e.getMessage(), e);
         }
     }
 
@@ -253,15 +249,17 @@ public class FlightRecorderConnection {
      * Close the recording. This method is called from the {@link Recording#close()} method.
      * @param id The id of the recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
-     * @throws java.lang.InternalError Wraps an {@code javax.management.InstanceNotFoundException},
+     * @throws JfrStreamingException Wraps an {@code javax.management.InstanceNotFoundException},
      * a {@code javax.management.MBeanException} or a {@code javax.management.ReflectionException}
      * and indicates an issue with the FlightRecorderMXBean in the JVM.
      */
-    void closeRecording(long id) throws IOException {
+    /* package-scoped */ void closeRecording(long id) throws IOException, JfrStreamingException {
         try {
-            connection.invoke(flightRecorder, "closeRecording", new Object[]{id}, new String[]{long.class.getName()});
+            Object[] args = new Object[]{id};
+            String[] argTypes = new String[]{long.class.getName()};
+            connection.invoke(flightRecorder, "closeRecording", args, argTypes);
         } catch (InstanceNotFoundException|MBeanException|ReflectionException e) {
-           throw new InternalError(e.getMessage(), e);
+           throw new JfrStreamingException(e.getMessage(), e);
         }
     }
 

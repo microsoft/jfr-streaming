@@ -1,6 +1,7 @@
 package com.microsoft.jfr;
 
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,14 +20,14 @@ public class RecordingOptionsTest {
                 {null, ""}
         };
     }
-    @org.testng.annotations.Test(dataProvider = "nameValues")
+    @Test(dataProvider = "nameValues")
     public void testGetName(String[] args) {
         String expected = args[1];
         RecordingOptions opts = new RecordingOptions.Builder().name(args[0]).build();
         assertEquals(opts.getName(), expected);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetNameDefault() {
         String expected = "";
         RecordingOptions opts = new RecordingOptions.Builder().build();
@@ -50,13 +51,13 @@ public class RecordingOptionsTest {
             {null, "0"}
         };
     }
-    @org.testng.annotations.Test(dataProvider = "maxAgeGoodValues")
+    @Test(dataProvider = "maxAgeGoodValues")
     public void testGetMaxAge(String[] args) {
         RecordingOptions opts = new RecordingOptions.Builder().maxAge(args[0]).build();
         assertEquals(opts.getMaxAge(), args[1]);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetMaxAgeDefault() {
         String expected = "0";
         RecordingOptions opts = new RecordingOptions.Builder().build();
@@ -77,7 +78,7 @@ public class RecordingOptionsTest {
                 {"3 _ ms"}
         };
     }
-    @org.testng.annotations.Test(dataProvider = "maxAgeBadValues", expectedExceptions = {IllegalArgumentException.class})
+    @Test(dataProvider = "maxAgeBadValues", expectedExceptions = {IllegalArgumentException.class})
     public void testGetMaxAgeNegative(String[] args) {
         RecordingOptions opts = new RecordingOptions.Builder().maxAge(args[0]).build();
     }
@@ -95,13 +96,13 @@ public class RecordingOptionsTest {
                 {null, "0"}
         };
     }
-    @org.testng.annotations.Test(dataProvider = "maxSizeGoodValues")
+    @Test(dataProvider = "maxSizeGoodValues")
     public void testGetMaxSize(String[] args) {
         RecordingOptions opts = new RecordingOptions.Builder().maxSize(args[0]).build();
         assertEquals(opts.getMaxSize(), args[1]);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetMaxSizeDefault() {
         String expected = "0";
         RecordingOptions opts = new RecordingOptions.Builder().build();
@@ -117,26 +118,26 @@ public class RecordingOptionsTest {
                 {"0xBEEF"}
         };
     }
-    @org.testng.annotations.Test(dataProvider = "maxSizeBadValues", expectedExceptions = {IllegalArgumentException.class})
+    @Test(dataProvider = "maxSizeBadValues", expectedExceptions = {IllegalArgumentException.class})
     public void testGetMaxSizeNegative(String[] args) {
         RecordingOptions opts = new RecordingOptions.Builder().maxSize(args[0]).build();
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetDumpOnExit() {
         String expected = "true";
         RecordingOptions opts = new RecordingOptions.Builder().dumpOnExit(expected).build();
         assertEquals(opts.getDumpOnExit(), expected);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetDumpOnExitDefault() {
         String expected = "false";
         RecordingOptions opts = new RecordingOptions.Builder().build();
         assertEquals(opts.getDumpOnExit(), expected);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetDumpOnExitBadValue() {
         String expected = "false";
         RecordingOptions opts = new RecordingOptions.Builder().dumpOnExit("BAD_VALUE").build();
@@ -153,35 +154,35 @@ public class RecordingOptionsTest {
                 {null, ""}
         };
     }
-    @org.testng.annotations.Test(dataProvider = "destinationValues")
+    @Test(dataProvider = "destinationValues")
     public void testGetDestination(String[] args) {
         String expected = args[1];
         RecordingOptions opts = new RecordingOptions.Builder().destination(args[0]).build();
         assertEquals(opts.getDestination(), expected);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetDestinationDefault() {
         String expected = "";
         RecordingOptions opts = new RecordingOptions.Builder().build();
         assertEquals(opts.getDestination(), expected);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetDisk() {
         String expected = "true";
         RecordingOptions opts = new RecordingOptions.Builder().disk(expected).build();
         assertEquals(opts.getDisk(), expected);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetDiskDefault() {
         String expected = "false";
         RecordingOptions opts = new RecordingOptions.Builder().build();
         assertEquals(opts.getDisk(), expected);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetDiskBadValue() {
         String expected = "false";
         RecordingOptions opts = new RecordingOptions.Builder().disk("BAD_VALUE").build();
@@ -205,14 +206,14 @@ public class RecordingOptionsTest {
                 {null, "0"}
         };
     }
-    @org.testng.annotations.Test(dataProvider = "durationGoodValues")
+    @Test(dataProvider = "durationGoodValues")
     public void testGetDuration(String[] args) {
         String expected = args[1];
         RecordingOptions opts = new RecordingOptions.Builder().duration(args[0]).build();
         assertEquals(opts.getDuration(), expected);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetDurationDefault() {
         String expected = "0";
         RecordingOptions opts = new RecordingOptions.Builder().build();
@@ -233,12 +234,12 @@ public class RecordingOptionsTest {
                 {"3 _ ms"}
         };
     }
-    @org.testng.annotations.Test(dataProvider = "durationBadValues", expectedExceptions = {IllegalArgumentException.class})
+    @Test(dataProvider = "durationBadValues", expectedExceptions = {IllegalArgumentException.class})
     public void testGetDurationNegative(String[] args) {
         RecordingOptions opts = new RecordingOptions.Builder().duration(args[0]).build();
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetRecordingOptions() {
         Map<String,String> expected = new HashMap<>();
         expected.put("name", "test");
@@ -260,7 +261,7 @@ public class RecordingOptionsTest {
         assertEquals(opts.getRecordingOptions(), expected);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetRecordingOptionsDefaults() {
         Map<String,String> expected = new HashMap<>();
         // Due to a bug, some JVMs default "disk=true". So include "disk=false" (the documented default)

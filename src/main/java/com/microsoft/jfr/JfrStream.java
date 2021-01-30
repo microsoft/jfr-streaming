@@ -15,7 +15,6 @@ import javax.management.ReflectionException;
  */
 class JfrStream extends InputStream {
 
-
     /* A default value for blockSize used by FlightRecorderMXBean#readStream(long) */
     private static final long DEFAULT_BLOCKSIZE = Long.getLong("jfr.stream.blocksize", 50000L);
 
@@ -29,6 +28,8 @@ class JfrStream extends InputStream {
     private byte[] buffer;
     private int index = 0;
     private boolean EOF = false;
+    // There is a recording id and an id you get from the recording for the stream.
+    // streamId is the id for the stream.
     private final long streamid;
     private final MBeanServerConnection connection;
     private final ObjectName flightRecorder;
