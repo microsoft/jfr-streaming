@@ -39,7 +39,7 @@ Starting with JDK 8u262, Java Flight Recorder is available for all OpenJDK distr
 
 # Build and Test
 The build is vanilla Maven.
-`mvn clean` - remove build artifacts
-`mvn compile` - compile the source code
-`mvn test` - run unit tests (this project uses TestNG)
-`mvn package` - build the .jar file
+<br/>`mvn clean` - remove build artifacts
+<br/>`mvn compile` - compile the source code
+<br/>`mvn test` - run unit tests (this project uses TestNG)
+<br/>`mvn package` - build the .jar file
