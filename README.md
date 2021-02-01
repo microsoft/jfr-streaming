@@ -11,7 +11,7 @@ as managing JFR across multiple JVMs, is not a goal of this project.
 
 # Getting Started
 This example illustrates some of the API. 
-```java:    
+```java   
     public static void main(String[] args) {
         MBeanServerConnection mBeanServer = ManagementFactory.getPlatformMBeanServer();
         try {
