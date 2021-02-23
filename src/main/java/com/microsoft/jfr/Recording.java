@@ -11,22 +11,20 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Provides a means to start, stop and dump recording data.
- * To create a {@code Recording}, use one of the {@code newRecording} methods
- * in {@link FlightRecorderConnection}.
- * @see FlightRecorderConnection#newRecording(RecordingOptions, RecordingConfiguration)
+ * To create a {@code Recording}, use {@link FlightRecorderConnection#newRecording(RecordingOptions, RecordingConfiguration)}.
  * @see <a href="https://docs.oracle.com/en/java/javase/11/docs/api/jdk.jfr/jdk/jfr/Recording.html">jdk.jfr.Recording</a>
  */
 public class Recording implements AutoCloseable {
 
     /**
      * A {@code Recording} may be in one of these states. Note that a {@code Recording} is
-     * no longer usable once it is in the {@code CLOSED} state. Valid state transitions are
-     * <code>
-     *     NEW -> [RECORDING, STOPPED, CLOSED]
-     *     RECORDING -> [RECORDING, STOPPED, CLOSED]
-     *     STOPPED -> [RECORDING, STOPPED, CLOSED]
-     *     CLOSED -> [CLOSED]
-     * </code>
+     * no longer usable once it is in the {@code CLOSED} state. Valid state transitions are:
+     * <ul>
+     *  <li>{@code NEW       -> [RECORDING, STOPPED, CLOSED]}</li>
+     *  <li>{@code RECORDING -> [RECORDING, STOPPED, CLOSED]}</li>
+     *  <li>{@code STOPPED   -> [RECORDING, STOPPED, CLOSED]}</li>
+     *  <li>{@code CLOSED    -> [CLOSED]}</li>
+     * </ul>
      * Calling a method on {@code Recording} that would cause an invalid transition
      * will raise an IllegalStateException.
      */
@@ -107,7 +105,7 @@ public class Recording implements AutoCloseable {
      * Start a recording. A recording may not be started after it is closed.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException This {@code Recording} is closed.
-     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}.
      * @return The recording id. 
      */
     public long start() throws IOException, IllegalStateException, JfrStreamingException {
@@ -126,7 +124,7 @@ public class Recording implements AutoCloseable {
      * Stop a recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException If the {@code Recording} is closed.
-     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}.
      */
     public void stop() throws IOException, IllegalStateException, JfrStreamingException {
         // state transitions:  RECORDING -> STOPPED, otherwise remain in state
@@ -144,7 +142,7 @@ public class Recording implements AutoCloseable {
      * @param outputFile the system-dependent file name where data is written, not {@code null}
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException If the {@code Recording} has not been started, or has been closed.
-     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}.
      * @throws NullPointerException If the {@code outputFile} argument is null.
      */
     public void dump(String outputFile) throws IOException, IllegalStateException, JfrStreamingException {
@@ -165,7 +163,7 @@ public class Recording implements AutoCloseable {
      * @return The cloned recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException If the {@code Recording} has not been started, or has been closed.
-     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}.
      */
     public Recording clone(boolean stop) throws IOException, JfrStreamingException {
         State currentState = state.get();
@@ -188,7 +186,7 @@ public class Recording implements AutoCloseable {
      * @return An {@code InputStream}, or {@code null} if no data is available in the interval.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException If the {@code Recording} has not been stopped.
-     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}.
      * @see JfrStream#getDefaultBlockSize()
      */
     public InputStream getStream(Instant startTime, Instant endTime)
@@ -201,15 +199,15 @@ public class Recording implements AutoCloseable {
      * The stream may contain some data outside the given range.
      * The {@code blockSize} is used to configure the maximum number of bytes to read
      * from underlying stream at a time. Setting blockSize to a very high value may result
-     * in an exception, if the Java Virtual Machine (JVM) deems the value too large to handle.
-     * Refer to the javadoc for {@code FlightRecorderMXBean#openStream}.
+     * in an exception if the Java Virtual Machine (JVM) deems the value too large to handle.
+     * Refer to the javadoc for {@code jdk.management.jfr.FlightRecorderMXBean#openStream}.
      * @param startTime The start time for the stream, or {@code null} to get data from the start time of the recording.
      * @param endTime The end time for the stream, or {@code null} to get data until the end of the recording.
      * @param blockSize The maximum number of bytes to read at a time.
      * @return An {@code InputStream}, or {@code null} if no data is available in the interval.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws IllegalStateException If the {@code Recording} has not been stopped.
-     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}.
      */
     public InputStream getStream(Instant startTime, Instant endTime, long blockSize)
             throws IOException, IllegalStateException, JfrStreamingException {
@@ -230,6 +228,7 @@ public class Recording implements AutoCloseable {
         return state.get();
     }
 
+    /** {@inheritDoc} */
     @Override
     public void close() throws IOException {
         // state transitions:  any -> CLOSED

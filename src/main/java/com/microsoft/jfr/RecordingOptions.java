@@ -11,14 +11,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Configuration is used to configure a flight recording. To create a {@code Configuration},
+ * Options for the recording that control maximum recording size, age and duration,
+ * and whether to store data to disk as it is recorded. To create {@code RecordingOptions},
  * use {@link Builder}.
- *
- * The configuration must be set at the time the {@code Recording} is created via
- * {@link FlightRecorderConnection#newRecording(RecordingOptions, RecordingConfiguration)}. A {@code Configuration}
- * is immutable which prevents attempts at changing the configuration while a recording
- * is in progress.
- *
+ * <p>
+ * The options must be set at the time the {@code Recording} is created via
+ * {@link FlightRecorderConnection#newRecording(RecordingOptions, RecordingConfiguration)}. 
+ * A {@code RecordingOptions} is immutable which prevents attempts at changing the options
+ * while a recording is in progress.
+ * <p>
  * <b>A note on the API</b>
  * It is enticing to want the Builder to take a {@code java.time.Duration} instead of a String for
  * the {@code maxAge} or {@code duration} API, or have the {@code maxAge} API take a long, or pass
@@ -37,7 +38,7 @@ import java.util.stream.Stream;
  */
 public class RecordingOptions {
 
-    /* Default values of some configuration elements. */
+    /* Default values of some options. */
     private static final String EMPTY_STRING = "";
     private static final String NO_LIMIT = "0";
 
@@ -236,9 +237,9 @@ public class RecordingOptions {
         }
 
         /**
-         * Construct a {@code Configuration} from the options that were set on this builder.
+         * Construct a {@code RecordingOptions} from the options that were set on this builder.
          * The {@code Builder} state is not reset by calling this method.
-         * @return A {@code Configuration}, never {@code null}.
+         * @return A {@code RecordingOptions}, never {@code null}.
          */
         public RecordingOptions build() {
             return new RecordingOptions(this);
@@ -247,8 +248,8 @@ public class RecordingOptions {
     }
 
     /**
-     * Constructor is private. Only the Builder can construct a Configuration.
-     * @param builder The builder that was used to parameterize the configuration
+     * Constructor is private. Only the Builder can construct a RecordingOptions.
+     * @param builder The builder that was used to parameterize the options.
      */
     private RecordingOptions(Builder builder) {
 
@@ -348,7 +349,7 @@ public class RecordingOptions {
         return recordingOptions;
     }
 
-    // The configuration options. The keys are names of recording options
+    // The recording options. The keys are names of recording options
     // according to FlightRecorderMXBean.  The value is a valid value for
     // the option. Options that take on default values should be absent.
     private final Map<String,String> recordingOptions;
