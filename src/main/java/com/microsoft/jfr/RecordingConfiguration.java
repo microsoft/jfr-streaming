@@ -33,9 +33,8 @@ public class RecordingConfiguration {
     }
 
     /**
-     * Get the name of a pre-defined configuration. The return value will be {@code null}
-     * if a pre-defined configuration has not been set.
-     * @return The name of a pre-defined configuration, or {@code null}.
+     * Get the name of the configuration. 
+     * @return The name of the configuration.
      */
     public String getName() {
         return name;

@@ -11,7 +11,7 @@ import javax.management.ObjectName;
 import javax.management.ReflectionException;
 
 /**
- * A JFR data stream backed by {@code FlightRecorderMXBean#readStream(long)}.
+ * A JFR data stream backed by {@code jdk.management.jfr.FlightRecorderMXBean#readStream(long)}.
  */
 class JfrStream extends InputStream {
 
@@ -20,7 +20,11 @@ class JfrStream extends InputStream {
 
     /**
      * Get the default value for blockSize used to configure the FlightRecorderMXBean#readStream(long) stream.
-     * The default is configurable by setting the {@code jfrstream.blocksize} system property.
+     * The default is configurable by setting the {@code jfr.stream.blocksize} system property.
+     * The {@code blockSize} is used to configure the maximum number of bytes to read
+     * from underlying stream at a time. Setting blockSize to a very high value may result
+     * in an exception if the Java Virtual Machine (JVM) deems the value too large to handle.
+     * Refer to the javadoc for {@code jdk.management.jfr.FlightRecorderMXBean#openStream}.
      * @return The default blockSize for reading flight recording data
      */
     public static long getDefaultBlockSize() { return DEFAULT_BLOCKSIZE; }

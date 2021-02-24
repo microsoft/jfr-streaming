@@ -24,14 +24,16 @@ import javax.management.JMException;
  *     classes to invoke methods on MBeans. It "wraps" the actual java.lang.Exception thrown.</dd>
  *     <dt><em>javax.management.MalformedObjectNameException</em></dt>
  *     <dd>The format of the string does not correspond to a valid ObjectName. This cause indicates
- *     a bug in the com.microsoft.censum.jfr package code.</dd>
+ *     a bug in the com.microsoft.jfr package code.</dd>
  *     <dt><em>javax.management.openmbean.OpenDataException</em></dt>
  *     <dd>This exception is thrown when an open type, an open data or an open MBean
  *     metadata info instance could not be constructed because one or more validity constraints
- *     were not met. This cause indicates a bug in the com.microsoft.censum.jfr package code.</dd>
+ *     were not met. This cause indicates a bug in the com.microsoft.jfr package code.</dd>
  * </dl>
  */
 public class JfrStreamingException extends Exception {
+
+    private static final long serialVersionUID = 7394612902107510439L;
 
     JfrStreamingException(String message, JMException cause) {
         super(message, cause);

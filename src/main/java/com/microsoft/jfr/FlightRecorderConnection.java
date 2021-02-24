@@ -29,13 +29,13 @@ import javax.management.openmbean.TabularType;
  * Represents a connection to a {@code jdk.management.jfr.FlightRecorderMXBean} of a JVM.
  * {@code FlightRecorderConnection} provides {@link #newRecording(RecordingOptions, RecordingConfiguration) API} to create
  * Java flight {@link Recording recordings}. More than one {@code Recording} can be created.
- *
+ * <p>
  * To use this class, a {@code javax.management.MBeanServerConnection} is needed.
  * This class uses the connection to make calls to the MBean server and does not change
  * the state of the connection. Management of the connection is the concern of the caller
  * and use of a {@code FlightRecorderConnection} for an MBean server connection that is no
  * longer valid will result in {@code IOException} being thrown.
- *
+ * <p>
  * The {@code MBeanServerConnection} can be a connection to any MBean server.
  * Typically, the connection is to the platform MBean server obtained by calling
  * {@code java.lang.management.ManagementFactory.getPlatformMBeanServer()}. The connection can
@@ -80,11 +80,11 @@ public class FlightRecorderConnection {
     }
 
     /**
-     * Create a {@link Recording} with the given configuration. The {@code Recording} is created
-     * in the {@link Recording.State#NEW} state. If {@code null} is passed for the
-     * {@code configuration} parameter, the recording will use the default values of
-     * {@code jdk.management.jfr.FlightRecorderMXBean}.
-     * @param recordingOptions The configuration to be used for the recording.
+     * Create a {@link Recording} with the given options and configuration. The {@code Recording} is created
+     * in the {@link Recording.State#NEW} state. The recording will use the default values of
+     * {@code jdk.management.jfr.FlightRecorderMXBean} for a parameter passed as {@code null}.
+     * @param recordingOptions The options to be used for the recording, or {@code null} for defaults.
+     * @param recordingConfiguration The configuration to be used for the recording, or {@code null} for defaults.
      * @return A {@link Recording} object associated with this {@code FlightRecorderConnection}.
      */
     public Recording newRecording(
@@ -170,7 +170,7 @@ public class FlightRecorderConnection {
      * @param id The id of the recording.
      * @param outputFile the system-dependent file name where data is written, not {@code null}
      * @throws IOException A communication problem occurred when talking to the MBean server.
-     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}.
      */
     /* package-scoped */ void dumpRecording(long id, String outputFile) throws IOException, JfrStreamingException {
         try {
@@ -189,7 +189,7 @@ public class FlightRecorderConnection {
      * @param id The id of the recording being cloned.
      * @param stop Whether to stop the cloned recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
-     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}. See {@link JfrStreamingException}.
+     * @throws JfrStreamingException Wraps a {@code javax.management.JMException}.
      */
     /* package-scoped */ long cloneRecording(long id, boolean stop) throws IOException, JfrStreamingException {
         try {
