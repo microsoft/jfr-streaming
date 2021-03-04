@@ -52,13 +52,12 @@ class JfrStream extends InputStream {
             String[] signature = new String[] {long.class.getName()};
             try {
                 buffer = (byte[]) connection.invoke(flightRecorder, "readStream", params, signature);
-                EOF = buffer == null;
             } catch (InstanceNotFoundException | MBeanException | ReflectionException e) {
-                throw new java.lang.InternalError(e.getMessage(), e);
+                throw new IOException(e.getMessage(), e);
             }
         }
 
-        if (EOF) return -1;
+        if (EOF || (EOF = (buffer == null))) return -1;
 
         int b = buffer[index] & 0xFF;
         index = ++index % buffer.length;
@@ -72,7 +71,7 @@ class JfrStream extends InputStream {
         try {
             connection.invoke(flightRecorder, "closeStream", params, signature);
         } catch (InstanceNotFoundException | MBeanException | ReflectionException e) {
-            throw new java.lang.InternalError(e.getMessage(), e);
+            throw new IOException(e.getMessage(), e);
         }
     }
 }
