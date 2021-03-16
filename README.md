@@ -74,4 +74,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ## License
 
-Microsoft JFR Streaming Library is licensed under the [MIT](https://github.com/microsoft/jfr-streaming/blob/master/LICENSE.txt) license.
+Microsoft JFR Streaming Library is licensed under the [MIT](https://github.com/microsoft/jfr-streaming/blob/master/LICENSE) license.
