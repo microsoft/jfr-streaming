@@ -11,15 +11,17 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    strategy: 
+      matrix:
+        java: [8, 11, 15]
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 11
+    - name: Set up JDK
       uses: actions/setup-java@v2-preview
       with:
-        java-version: 11
+        java-version: ${{ matrix.java }}
         distribution: 'adopt'
     - name: Build with Maven
       run: mvn -B package --file pom.xml

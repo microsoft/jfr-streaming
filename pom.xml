@@ -12,7 +12,11 @@
 
   <name>Java Flight Recorder Streaming Library</name>
   <description>A library for streaming JFR files via the FlightRecorderMXBean</description>
-  <url>https://github.com/Microsoft/jfr-streaming.git</url>
+  <url>https://github.com/Microsoft/jfr-streaming</url>
+  <organization>
+    <name>Microsoft Corporation</name>
+    <url>http://microsoft.com</url>
+  </organization>
 
   <licenses>
     <license>
@@ -25,13 +29,13 @@
   <scm>
     <connection>scm:git:git@github.com:Microsoft/jfr-streaming.git</connection>
     <developerConnection>scm:git:git@github.com:Microsoft/jfr-streaming.git</developerConnection>
-    <url>https://github.com/Microsoft/jfr-streaming.git</url>
+    <url>https://github.com/Microsoft/jfr-streaming</url>
   </scm>
 
   <developers>
     <developer>
       <id>microsoft</id>
-      <name>Microsoft</name>
+      <name>Microsoft Corporation</name>
     </developer>
   </developers>
 
@@ -73,6 +77,7 @@
       </build>
     </profile>
   </profiles>
+  
   <properties>
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
