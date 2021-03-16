@@ -28,19 +28,22 @@ This example illustrates some of the API.
 ```java   
     public static void main(String[] args) {
         MBeanServerConnection mBeanServer = ManagementFactory.getPlatformMBeanServer();
+        
         try {
-            FlightRecorderConnection flightRecorderConnection = FlightRecorderConnection.connect(mBeanServer);
-            RecordingOptions recordingOptions = new RecordingOptions.Builder().disk("true").build();
-            RecordingConfiguration recordingConfiguration = RecordingConfiguration.PROFILE_CONFIGURATION;
-            try (Recording recording = flightRecorderConnection.newRecording(recordingOptions, recordingConfiguration)) {
+            var flightRecorderConnection = FlightRecorderConnection.connect(mBeanServer);
+            var recordingOptions = new RecordingOptions.Builder().disk("true").build();
+            var recordingConfiguration = RecordingConfiguration.PROFILE_CONFIGURATION;
+            
+            try (var recording = flightRecorderConnection.newRecording(recordingOptions, recordingConfiguration)) {
                 recording.start();
                 TimeUnit.SECONDS.sleep(10);
                 recording.stop();
+                
                 recording.dump(Paths.get(System.getProperty("user.dir"), "recording.jfr").toString());
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             } catch (InterruptedException ie) {
-
+                ie.printStackTrace();
             }
         } catch (InstanceNotFoundException|IOException e) {
             e.printStackTrace();
