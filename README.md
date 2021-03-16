@@ -25,33 +25,48 @@ as managing JFR across multiple JVMs, is not a goal of this project.
 ### Example
 
 This example illustrates some of the API. 
+
 ```java   
+///usr/bin/env jbang "$0" "$@" ; exit $?
+//DEPS com.microsoft.jfr:jfr-streaming:1.0.0
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
+import java.lang.management.ManagementFactory;
+import javax.management.*;
+import com.microsoft.jfr.*;
+
+public class Sample {
     public static void main(String[] args) {
         MBeanServerConnection mBeanServer = ManagementFactory.getPlatformMBeanServer();
-        
         try {
             FlightRecorderConnection flightRecorderConnection = FlightRecorderConnection.connect(mBeanServer);
             RecordingOptions recordingOptions = new RecordingOptions.Builder().disk("true").build();
             RecordingConfiguration recordingConfiguration = RecordingConfiguration.PROFILE_CONFIGURATION;
-            
+
             try (Recording recording = flightRecorderConnection.newRecording(recordingOptions, recordingConfiguration)) {
                 recording.start();
                 TimeUnit.SECONDS.sleep(10);
                 recording.stop();
-                
+
                 recording.dump(Paths.get(System.getProperty("user.dir"), "recording.jfr").toString());
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
             }
-        } catch (InstanceNotFoundException|IOException e) {
+        } catch (InstanceNotFoundException | IOException | JfrStreamingException | InterruptedException e) {
             e.printStackTrace();
         }
     }
+}
 ```
 
-Note that for Oracle JDK 8, it may be necessary to unlock the Java Flight Recorder 
+You can run the code above with [jbang](https://www.jbang.dev):
+
+    1. Install jbang.
+    1. Save the code above in a local `Sample.java` file, or [download directly](https://raw.githubusercontent.com/microsoft/jfr-streaming/main/src/test/java/Sample.java).
+    2. Run the code: `jbang Sample.java`
+
+### Note on Oracle JDK 8
+
+For Oracle JDK 8, it may be necessary to unlock the Java Flight Recorder 
 commercial feature with the JVM arg `-XX:+UnlockCommercialFeatures -XX:+FlightRecorder`.
 Starting with JDK 8u262, Java Flight Recorder is available for all OpenJDK distributions.
 
