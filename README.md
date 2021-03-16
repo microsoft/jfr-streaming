@@ -50,6 +50,7 @@ public class Sample {
                 recording.stop();
 
                 recording.dump(Paths.get(System.getProperty("user.dir"), "recording.jfr").toString());
+                System.out.println("JFR recording ready: recording.jfr");
             }
         } catch (InstanceNotFoundException | IOException | JfrStreamingException | InterruptedException e) {
             e.printStackTrace();
