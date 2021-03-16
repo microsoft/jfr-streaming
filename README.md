@@ -60,9 +60,9 @@ public class Sample {
 
 You can run the code above with [jbang](https://www.jbang.dev):
 
-    1. Install jbang.
-    1. Save the code above in a local `Sample.java` file, or [download directly](https://raw.githubusercontent.com/microsoft/jfr-streaming/main/src/test/java/Sample.java).
-    2. Run the code: `jbang Sample.java`
+1. Install jbang.
+1. Save the code above in a local `Sample.java` file, or [download directly](https://raw.githubusercontent.com/microsoft/jfr-streaming/main/src/test/java/Sample.java).
+1. Run the code: `jbang Sample.java`
 
 ### Note on Oracle JDK 8
 
