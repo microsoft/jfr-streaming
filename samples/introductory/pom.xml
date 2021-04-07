@@ -6,22 +6,30 @@
   <parent>
     <groupId>com.microsoft.jfr</groupId>
     <artifactId>jfr-streaming-samples</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>sample</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <artifactId>introductory</artifactId>
+  <version>1.0.1-SNAPSHOT</version>
 
-  <name>sample</name>
+  <name>introductory</name>
   <description>A sample for Java Flight Recorder Streaming Library using Fibonacci number generator</description>
   <url>https://github.com/Microsoft/jfr-streaming.git</url>
 
-<!--  <properties>-->
-<!--    <maven.compiler.source>11</maven.compiler.source>-->
-<!--    <maven.compiler.target>11</maven.compiler.target>-->
-<!--    <maven.compiler.testSource>11</maven.compiler.testSource>-->
-<!--    <maven.compiler.testTarget>11</maven.compiler.testTarget>-->
-<!--    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
-<!--  </properties>-->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>com.microsoft.jfr.Main</mainClass>
+          <cleanupDaemonThreads>false</cleanupDaemonThreads>
+          <arguments>
+            <argument>100</argument>
+          </arguments>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
