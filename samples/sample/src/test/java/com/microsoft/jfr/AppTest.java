@@ -1,5 +1,3 @@
-package com.microsoft.jfr;
-
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
