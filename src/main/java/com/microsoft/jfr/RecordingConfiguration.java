@@ -83,16 +83,16 @@ public abstract class RecordingConfiguration {
     /**
      * Sets a configuration to use with a {@code Recording}.
      * @param configuration The value of the configuration, not {@code null}.
-     * @throws NullPointerException if predefinedConfiguration is {@code null}
+     * @throws NullPointerException if configuration is {@code null}
      */
     public RecordingConfiguration(String configuration) {
-        Objects.requireNonNull(configuration, "configurationName cannot be null");
+        Objects.requireNonNull(configuration, "configuration cannot be null");
         this.configuration = configuration;
     }
 
     /**
-     * Get the name of the configuration. 
-     * @return The name of the configuration.
+     * Get the recording configuration.
+     * @return The the recording configuration.
      */
     public String getConfiguration() {
         return configuration;
