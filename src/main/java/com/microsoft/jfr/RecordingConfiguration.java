@@ -92,7 +92,7 @@ public abstract class RecordingConfiguration {
 
     /**
      * Get the recording configuration.
-     * @return The the recording configuration.
+     * @return The recording configuration.
      */
     public String getConfiguration() {
         return configuration;
