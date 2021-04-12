@@ -117,11 +117,11 @@ public class FlightRecorderConnection {
             final long id = (long) connection.invoke(flightRecorder, "newRecording", args, argTypes);
 
             if (recordingConfiguration != null) {
-                String predefinedConfiguration = recordingConfiguration.getName();
-                if (predefinedConfiguration != null && predefinedConfiguration.trim().length() > 0) {
-                    args = new Object[]{id, predefinedConfiguration};
+                String configuration = recordingConfiguration.getConfiguration();
+                if (configuration != null && configuration.trim().length() > 0) {
+                    args = new Object[]{id, configuration};
                     argTypes = new String[]{long.class.getName(), String.class.getName()};
-                    connection.invoke(flightRecorder, "setPredefinedConfiguration", args, argTypes);
+                    connection.invoke(flightRecorder, recordingConfiguration.getMbeanSetterFunction(), args, argTypes);
                 }
             }
 

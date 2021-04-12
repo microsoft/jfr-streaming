@@ -1,9 +1,9 @@
 package com.microsoft.jfr;
 
 import org.testng.Reporter;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.management.InstanceNotFoundException;
@@ -30,11 +30,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class RecordingTest {
 
@@ -42,9 +42,13 @@ public class RecordingTest {
 
     @BeforeTest
     public void setup() {
+        flightRecorderConnection = getFlightRecorderConnection();
+    }
+
+    public static FlightRecorderConnection getFlightRecorderConnection() {
         MBeanServerConnection mBeanServer = ManagementFactory.getPlatformMBeanServer();
         try {
-            flightRecorderConnection = FlightRecorderConnection.connect(mBeanServer);
+            return FlightRecorderConnection.connect(mBeanServer);
         } catch (InstanceNotFoundException e) {
             fail("Either JVM does not support JFR, or experimental options need to be enabled", e);
         } catch (IOException e) {
@@ -53,10 +57,11 @@ public class RecordingTest {
         } catch (JfrStreamingException reallyBad) {
             fail ("something really bad happened", reallyBad);
         }
+        return null;
     }
 
     @AfterTest
-    public void tearDown() {
+    public static void tearDown() {
         try {
             Path userDir = Paths.get(System.getProperty("user.dir"));
             Files.list(userDir)
@@ -72,7 +77,6 @@ public class RecordingTest {
         } catch (IOException ignored) {
             Reporter.log(ignored.getMessage());
         }
-
     }
 
     @Test
@@ -305,7 +309,7 @@ public class RecordingTest {
     }
 
     // something to do
-    private static void fib(int limit) {
+    protected static void fib(int limit) {
         BigDecimal[] fibs = new BigDecimal[limit];
         fibs[0] =  new BigDecimal(0);
         fibs[1] = new BigDecimal(1);
