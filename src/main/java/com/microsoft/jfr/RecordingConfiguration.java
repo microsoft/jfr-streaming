@@ -27,7 +27,7 @@ public abstract class RecordingConfiguration {
      * A pre-defined configuration is one which you could select with the 'settings' option
      * of the JVM option 'StartFlightRecording', for example {@code -XX:StartFlightRecording:settings=default.jfc}.
      */
-    static class PredefinedConfiguration extends RecordingConfiguration {
+    public static class PredefinedConfiguration extends RecordingConfiguration {
         @Override
         public String getMbeanSetterFunction() {
             return "setPredefinedConfiguration";
@@ -47,7 +47,7 @@ public abstract class RecordingConfiguration {
     /**
      * A configuration that is read from a jfc file
      */
-    static class JfcFileConfiguration extends RecordingConfiguration {
+    public static class JfcFileConfiguration extends RecordingConfiguration {
         /**
          * Sets a configuration from a jfc file to use with a {@code Recording}.
          *
