@@ -1,18 +1,18 @@
-# jfr-streaming Sample app - fibonacci numbers
+# jfr-streaming introductory sample
 
-This sample uses jfr-streaming to capture a flight recording file. The sample creates the file `recording.jfr` which can be opened in JDK Mission control to visualize the stats.
-
-This app prints fibonacci numbers using multi threading, so that all the CPU cores get used.
+This sample uses jfr-streaming to capture a flight recording file. The sample creates the file `recording.jfr` which 
+can be opened in JDK Mission Control to visualize the stats.
 
 ### Execute
 
-To execute this single module, first we need to do:
+To build the sample from the 'introductory' directory:
 ```shell
-$ cd samples/introductory
 $ mvn clean compile
 ```
-Once the build is done, we can run the app as many times as we want:
+To run the sample:
 ```shell
 $ mvn exec:java
 ```
-This command uses default value for `range` from the `pom.xml` file. We can configure that value by passing it as an argument to this command `-Dexec.arguments="1000"`
+The sample simulates load by generating numbers of a Fibonacci sequence. The number of 
+values to generate can be specified by passing it as an argument to this command, for
+example `-Dexec.arguments="1000"`
