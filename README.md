@@ -1,6 +1,6 @@
 # Microsoft JFR Streaming
 
-The `jfr-streaming project provides a core library for configuring, starting, stopping, 
+The `jfr-streaming` project provides a core library for configuring, starting, stopping, 
 and reading [Java Flight Recording](https://docs.oracle.com/javacomponents/jmc-5-4/jfr-runtime-guide/about.htm#JFRUH170)
 files from a JVM. The code does not depend on the `jdk.jfr`
 module and will compile and run against JDK 8 or higher. It uses a connection to an MBean
