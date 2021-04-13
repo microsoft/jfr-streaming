@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.microsoft.jfr</groupId>
   <artifactId>jfr-streaming</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.1.0</version>
 
   <name>Java Flight Recorder Streaming Library</name>
   <description>A library for streaming JFR files via the FlightRecorderMXBean</description>
@@ -30,6 +30,7 @@
     <connection>scm:git:git@github.com:Microsoft/jfr-streaming.git</connection>
     <developerConnection>scm:git:git@github.com:Microsoft/jfr-streaming.git</developerConnection>
     <url>https://github.com/Microsoft/jfr-streaming</url>
+    <tag>jfr-streaming-1.1.0</tag>
   </scm>
 
   <developers>
