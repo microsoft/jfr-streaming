@@ -98,7 +98,7 @@ public abstract class RecordingConfiguration {
         return configuration;
     }
 
-    // A configuration
+    /** The configuration name or file contents. */
     protected final String configuration;
 
 }
