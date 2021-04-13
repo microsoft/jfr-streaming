@@ -1,5 +1,5 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
-//DEPS com.microsoft.jfr:jfr-streaming:1.0.0
+//DEPS com.microsoft.jfr:jfr-streaming:1.1.0
 
 import java.io.IOException;
 import java.nio.file.Paths;
