@@ -53,7 +53,7 @@ public class FlightRecorderConnection {
      * {@code FlightRecorderConnection}, or throws an exception. An {@code IOException}
      * indicates a problem with the connection to the MBean server. An {@code InstanceNotFoundException}
      * indicates that the FlightRecorder MBean is not registered on the target JVM. This could happen
-     * if the target JVM does not support Java Flight Recorder, or if expermental features need to be
+     * if the target JVM does not support Java Flight Recorder, or if experimental features need to be
      * enabled on the target JVM.
      *
      * @param mBeanServerConnection The {@code MBeanServerConnection} to the JVM.
