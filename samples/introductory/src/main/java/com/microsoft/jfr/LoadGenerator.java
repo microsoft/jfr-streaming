@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.package com.microsoft.jfr;
+package com.microsoft.jfr;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;

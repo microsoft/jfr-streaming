@@ -10,5 +10,5 @@ $ mvn clean compile
 ```
 To run a sample, provide the Maven `--project` argument, or run from the sample's directory:
 ```shell
-$ mvn exec:java --project introductory
+$ mvn exec:java --projects introductory
 ```
