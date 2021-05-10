@@ -1,6 +1,7 @@
 package com.microsoft.jfr;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Objects;
@@ -42,12 +43,14 @@ public abstract class RecordingConfiguration {
         public PredefinedConfiguration(String configurationName) {
             super(configurationName);
         }
+
     }
 
     /**
      * A configuration that is read from a jfc file
      */
     public static class JfcFileConfiguration extends RecordingConfiguration {
+
         /**
          * Sets a configuration from a jfc file to use with a {@code Recording}.
          *

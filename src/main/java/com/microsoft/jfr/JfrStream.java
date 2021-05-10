@@ -13,7 +13,7 @@ import javax.management.ReflectionException;
 /**
  * A JFR data stream backed by {@code jdk.management.jfr.FlightRecorderMXBean#readStream(long)}.
  */
-class JfrStream extends InputStream {
+public class JfrStream extends InputStream {
 
     /* A default value for blockSize used by FlightRecorderMXBean#readStream(long) */
     private static final long DEFAULT_BLOCKSIZE = Long.getLong("jfr.stream.blocksize", 50000L);
@@ -38,7 +38,7 @@ class JfrStream extends InputStream {
     private final MBeanServerConnection connection;
     private final ObjectName flightRecorder;
 
-    JfrStream(MBeanServerConnection connection, ObjectName flightRecorder, long streamid) {
+    public JfrStream(MBeanServerConnection connection, ObjectName flightRecorder, long streamid) {
         this.streamid = streamid;
         this.connection = connection;
         this.flightRecorder = flightRecorder;

@@ -16,7 +16,7 @@ import java.util.stream.Stream;
  * use {@link Builder}.
  * <p>
  * The options must be set at the time the {@code Recording} is created via
- * {@link FlightRecorderConnection#newRecording(RecordingOptions, RecordingConfiguration)}. 
+ * {@link FlightRecorderConnection#newRecording(RecordingOptions, RecordingConfiguration)}.
  * A {@code RecordingOptions} is immutable which prevents attempts at changing the options
  * while a recording is in progress.
  * <p>
@@ -345,7 +345,7 @@ public class RecordingOptions {
      * according to FlightRecorderMXBean.
      * @return A read-only map of the recording options.
      */
-    /* package-scoped */  Map<String,String> getRecordingOptions() {
+    public Map<String,String> getRecordingOptions() {
         return recordingOptions;
     }
 

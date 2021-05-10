@@ -1,7 +1,5 @@
 package com.microsoft.jfr;
 
-import javax.management.JMException;
-
 /**
  * An JfrStreamingException is a wrapper around specific {@code javax.management.JMException}
  * instances which might be thrown, either directly or indirectly, by methods of this package.
@@ -35,8 +33,11 @@ public class JfrStreamingException extends Exception {
 
     private static final long serialVersionUID = 7394612902107510439L;
 
-    JfrStreamingException(String message, JMException cause) {
+    public JfrStreamingException(String message, Exception cause) {
         super(message, cause);
     }
 
+    public JfrStreamingException(String message) {
+        super(message);
+    }
 }
