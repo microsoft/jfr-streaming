@@ -59,7 +59,7 @@ public class FlightRecorderConnectionJava8Test {
     }
 
     @Test
-    public void startRecordingThrowsJfrStreamingException() throws Exception {
+    public void startRecordingParsesIdCorrectly() throws Exception {
         ObjectName objectName = mock(ObjectName.class);
         MBeanServerConnection mBeanServerConnection = mockMbeanServer(objectName, "unlocked");
         when(mBeanServerConnection.invoke(any(ObjectName.class), anyString(), any(Object[].class),
