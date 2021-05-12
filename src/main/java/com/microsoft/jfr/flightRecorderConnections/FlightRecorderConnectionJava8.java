@@ -212,7 +212,8 @@ public class FlightRecorderConnectionJava8 implements FlightRecorderConnection {
     }
 
 
-    private static void assertCommercialFeaturesUnlocked(MBeanServerConnection mBeanServerConnection, ObjectName objectName) throws JfrStreamingException {
+    // visible for testing
+    static void assertCommercialFeaturesUnlocked(MBeanServerConnection mBeanServerConnection, ObjectName objectName) throws JfrStreamingException {
         try {
             Object unlockedMessage = mBeanServerConnection.invoke(objectName, "vmCheckCommercialFeatures", null, null);
             if (unlockedMessage instanceof String) {
