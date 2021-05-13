@@ -1,4 +1,4 @@
-package com.microsoft.jfr.flightRecorderConnections;
+package com.microsoft.jfr.dcmd;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -15,7 +15,7 @@ import com.microsoft.jfr.RecordingOptions;
 import org.junit.Test;
 import org.testng.Assert;
 
-public class FlightRecorderConnectionJava8Test {
+public class FlightRecorderDiagnosticCommandConnectionTest {
 
     public MBeanServerConnection mockMbeanServer(ObjectName objectName, String vmCheckCommercialFeaturesResponse) throws Exception {
         MBeanServerConnection mBeanServerConnection = mock(MBeanServerConnection.class);
@@ -27,20 +27,20 @@ public class FlightRecorderConnectionJava8Test {
     public void assertCommercialFeaturesUnlocked() throws Exception {
         ObjectName objectName = mock(ObjectName.class);
         MBeanServerConnection mBeanServerConnection = mockMbeanServer(objectName, "unlocked");   
-        FlightRecorderConnectionJava8.assertCommercialFeaturesUnlocked(mBeanServerConnection, objectName);
+        FlightRecorderDiagnosticCommandConnection.assertCommercialFeaturesUnlocked(mBeanServerConnection, objectName);
     }
 
     @Test(expected = JfrStreamingException.class)
     public void assertCommercialFeaturesLockedThrows() throws Exception {
         ObjectName objectName = mock(ObjectName.class);
         MBeanServerConnection mBeanServerConnection = mockMbeanServer(objectName, "locked");
-        FlightRecorderConnectionJava8.assertCommercialFeaturesUnlocked(mBeanServerConnection, objectName);
+        FlightRecorderDiagnosticCommandConnection.assertCommercialFeaturesUnlocked(mBeanServerConnection, objectName);
     }
 
-    private FlightRecorderConnectionJava8 createconnection() throws Exception {
+    private FlightRecorderDiagnosticCommandConnection createconnection() throws Exception {
         ObjectName objectName = mock(ObjectName.class);
         MBeanServerConnection mBeanServerConnection = mockMbeanServer(objectName, "locked");
-        return new FlightRecorderConnectionJava8(mBeanServerConnection, objectName);
+        return new FlightRecorderDiagnosticCommandConnection(mBeanServerConnection, objectName);
     }
     
     @Test(expected = UnsupportedOperationException.class)
@@ -64,7 +64,7 @@ public class FlightRecorderConnectionJava8Test {
         MBeanServerConnection mBeanServerConnection = mockMbeanServer(objectName, "unlocked");
         when(mBeanServerConnection.invoke(any(ObjectName.class), anyString(), any(Object[].class),
                 any(String[].class))).thenReturn("Started recording 99. ");
-        FlightRecorderConnectionJava8 connection = new FlightRecorderConnectionJava8(mBeanServerConnection, objectName);
+        FlightRecorderDiagnosticCommandConnection connection = new FlightRecorderDiagnosticCommandConnection(mBeanServerConnection, objectName);
         long id = connection.startRecording(new RecordingOptions.Builder().build(), RecordingConfiguration.PROFILE_CONFIGURATION);
         Assert.assertEquals(id, 99);
     }

@@ -33,10 +33,19 @@ public class JfrStreamingException extends Exception {
 
     private static final long serialVersionUID = 7394612902107510439L;
 
+    /**
+     * Construct a {@code JfrStreamingException} with a message and cause.
+     * @param message The exception message.
+     * @param cause The cause of the exception.
+     */
     public JfrStreamingException(String message, Exception cause) {
         super(message, cause);
     }
 
+    /**
+     * Construct a {@code JfrStreamingException} with a message only.
+     * @param message The exception message.
+     */
     public JfrStreamingException(String message) {
         super(message);
     }

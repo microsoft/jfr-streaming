@@ -1,4 +1,4 @@
-package com.microsoft.jfr.flightRecorderConnections;
+package com.microsoft.jfr.dcmd;
 
 import com.microsoft.jfr.FlightRecorderConnection;
 import com.microsoft.jfr.JfrStreamingException;
@@ -24,22 +24,34 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class FlightRecorderConnectionJava8 implements FlightRecorderConnection {
+/**
+ * Represents a connection to the {@code com.sun.management DiagnosticCommand} MBean of a JVM.
+ * This is the same mechanism used by the Java <i>jcmd</i> tool.
+ * {@code FlightRecorderDiagnosticCommandConnection} provides
+ * {@link #newRecording(RecordingOptions, RecordingConfiguration) API} to create
+ * Java flight {@link Recording recordings}. More than one {@code Recording} can be created.
+ * <p>
+ * To use this class, a {@code javax.management.MBeanServerConnection} is needed.
+ * This class uses the connection to make calls to the MBean server and does not change
+ * the state of the connection. Management of the connection is the concern of the caller
+ * and use of a {@code FlightRecorderConnection} for an MBean server connection that is no
+ * longer valid will result in {@code IOException} being thrown.
+ * <p>
+ * The {@code MBeanServerConnection} can be a connection to any MBean server.
+ * Typically, the connection is to the platform MBean server obtained by calling
+ * {@code java.lang.management.ManagementFactory.getPlatformMBeanServer()}. The connection can
+ * also be to a remote MBean server via {@code javax.management.remote.JMXConnector}.
+ * Refer to the summary in the javadoc of the {@code javax.management} package and of the
+ * {@code javax.management.remote} package for details.
+ *
+ */
+public class FlightRecorderDiagnosticCommandConnection extends FlightRecorderConnection {
     private static final String DIAGNOSTIC_COMMAND_OBJECT_NAME = "com.sun.management:type=DiagnosticCommand";
     private static final String JFR_START_REGEX = "Started recording (.+?)\\. .*";
     private static final Pattern JFR_START_PATTERN = Pattern.compile(JFR_START_REGEX, Pattern.DOTALL);
 
     // All JFR commands take String[] parameters
     private static final String[] signature = new String[]{"[Ljava.lang.String;"};
-
-
-    private final MBeanServerConnection mBeanServerConnection;
-    private final ObjectName objectName;
-
-    public FlightRecorderConnectionJava8(MBeanServerConnection mBeanServerConnection, ObjectName objectName) {
-        this.mBeanServerConnection = mBeanServerConnection;
-        this.objectName = objectName;
-    }
 
     /**
      * Create a connection to the {@code FlightRecorder} via JMX. This method either returns a
@@ -64,7 +76,7 @@ public class FlightRecorderConnectionJava8 implements FlightRecorderConnection {
             ObjectInstance objectInstance = mBeanServerConnection.getObjectInstance(new ObjectName(DIAGNOSTIC_COMMAND_OBJECT_NAME));
             ObjectName objectName = objectInstance.getObjectName();
             assertCommercialFeaturesUnlocked(mBeanServerConnection, objectName);
-            return new FlightRecorderConnectionJava8(mBeanServerConnection, objectInstance.getObjectName());
+            return new FlightRecorderDiagnosticCommandConnection(mBeanServerConnection, objectInstance.getObjectName());
         } catch (MalformedObjectNameException e) {
             // Not expected to happen. This exception comes from the ObjectName constructor. If
             // DIAGNOSTIC_COMMAND_OBJECT_NAME is malformed, then this is an internal bug.
@@ -72,18 +84,8 @@ public class FlightRecorderConnectionJava8 implements FlightRecorderConnection {
         }
     }
 
-    /**
-     * Create a {@link Recording} with the given options and configuration. The {@code Recording} is created
-     * in the {@link Recording.State#NEW} state. The recording will use the default values of
-     * {@code jdk.management.jfr.FlightRecorderMXBean} for a parameter passed as {@code null}.
-     *
-     * @param recordingOptions       The options to be used for the recording, or {@code null} for defaults.
-     * @param recordingConfiguration The configuration to be used for the recording, or {@code null} for defaults.
-     * @return A {@link Recording} object associated with this {@code FlightRecorderConnection}.
-     */
-    @Override
-    public Recording newRecording(RecordingOptions recordingOptions, RecordingConfiguration recordingConfiguration) {
-        return new Recording(this, recordingOptions, recordingConfiguration);
+    /* package scope for testing */ FlightRecorderDiagnosticCommandConnection(MBeanServerConnection mBeanServerConnection, ObjectName objectName) {
+        super(mBeanServerConnection, objectName);
     }
 
     /**
