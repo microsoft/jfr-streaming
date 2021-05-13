@@ -1,13 +1,5 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
 package com.microsoft.jfr;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanException;
 import javax.management.MBeanServerConnection;
@@ -24,6 +16,12 @@ import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents a connection to a {@code jdk.management.jfr.FlightRecorderMXBean} of a JVM.
@@ -42,7 +40,6 @@ import javax.management.openmbean.TabularType;
  * also be to a remote MBean server via {@code javax.management.remote.JMXConnector}.
  * Refer to the summary in the javadoc of the {@code javax.management} package and of the
  * {@code javax.management.remote} package for details.
- *
  */
 public class FlightRecorderConnection {
 
@@ -54,19 +51,19 @@ public class FlightRecorderConnection {
      * indicates a problem with the connection to the MBean server. An {@code InstanceNotFoundException}
      * indicates that the FlightRecorder MBean is not registered on the target JVM. This could happen
      * if the target JVM does not support Java Flight Recorder, or if experimental features need to be
-     * enabled on the target JVM.
+     * enabled on the target JVM. If an {@code InstanceNotFoundException} is thrown by a Java 8 JVM,
+     * consider using {@link com.microsoft.jfr.dcmd.FlightRecorderDiagnosticCommandConnection}.
      *
      * @param mBeanServerConnection The {@code MBeanServerConnection} to the JVM.
      * @return A {@code FlightRecorderConnection}.
-     * @throws IOException A communication problem occurred when talking to the MBean server.
+     * @throws IOException               A communication problem occurred when talking to the MBean server.
      * @throws InstanceNotFoundException The FlightRecorder MBean is not registered on the target JVM.
-     * @throws JfrStreamingException Wraps a {@code javax.management.MalformedObjectNameException}
-     * and indicates a bug in this class.
-     * @throws NullPointerException The {@code mBeanServerConnection} parameter is {@code null}.
+     * @throws JfrStreamingException     Wraps a {@code javax.management.MalformedObjectNameException}
+     *                                   and indicates a bug in this class.
+     * @throws NullPointerException      The {@code mBeanServerConnection} parameter is {@code null}.
      */
     public static FlightRecorderConnection connect(MBeanServerConnection mBeanServerConnection)
-            throws IOException, InstanceNotFoundException, JfrStreamingException
-    {
+            throws IOException, InstanceNotFoundException, JfrStreamingException {
         Objects.requireNonNull(mBeanServerConnection);
         try {
             ObjectName objectName = new ObjectName(JFR_OBJECT_NAME);
@@ -108,20 +105,20 @@ public class FlightRecorderConnection {
      * The cause may also be a {@code javax.management.openmbean.OpenDataException}
      * which indicates a bug in the code of this class.
      */
-    /* package-scoped */ long startRecording(RecordingOptions recordingOptions, RecordingConfiguration recordingConfiguration)
+    public long startRecording(RecordingOptions recordingOptions, RecordingConfiguration recordingConfiguration)
             throws IOException, JfrStreamingException {
 
         try {
             Object[] args = new Object[]{};
             String[] argTypes = new String[]{};
-            final long id = (long) connection.invoke(flightRecorder, "newRecording", args, argTypes);
+            final long id = (long) mBeanServerConnection.invoke(objectName, "newRecording", args, argTypes);
 
             if (recordingConfiguration != null) {
                 String configuration = recordingConfiguration.getConfiguration();
                 if (configuration != null && configuration.trim().length() > 0) {
                     args = new Object[]{id, configuration};
                     argTypes = new String[]{long.class.getName(), String.class.getName()};
-                    connection.invoke(flightRecorder, recordingConfiguration.getMbeanSetterFunction(), args, argTypes);
+                    mBeanServerConnection.invoke(objectName, recordingConfiguration.getMbeanSetterFunction(), args, argTypes);
                 }
             }
 
@@ -131,16 +128,16 @@ public class FlightRecorderConnection {
                     TabularData recordingOptionsParam = makeOpenData(options);
                     args = new Object[]{id, recordingOptionsParam};
                     argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
-                    connection.invoke(flightRecorder, "setRecordingOptions", args, argTypes);
+                    mBeanServerConnection.invoke(objectName, "setRecordingOptions", args, argTypes);
                 }
             }
 
             args = new Object[]{id};
             argTypes = new String[]{long.class.getName()};
-            connection.invoke(flightRecorder, "startRecording", args, argTypes);
+            mBeanServerConnection.invoke(objectName, "startRecording", args, argTypes);
 
             return id;
-        } catch (OpenDataException|InstanceNotFoundException|MBeanException|ReflectionException e) {
+        } catch (OpenDataException |InstanceNotFoundException| MBeanException | ReflectionException e) {
             // In theory, we should never get these.
             throw new JfrStreamingException(e.getMessage(), e);
         }
@@ -154,11 +151,11 @@ public class FlightRecorderConnection {
      * a {@code javax.management.MBeanException} or a {@code javax.management.ReflectionException}
      * and indicates an issue with the FlightRecorderMXBean in the JVM.
      */
-    /* package-scoped */ void stopRecording(long id) throws IOException, JfrStreamingException {
+    public void stopRecording(long id) throws IOException, JfrStreamingException {
         try {
             Object[] args = new Object[]{id};
             String[] argTypes = new String[]{long.class.getName()};
-            connection.invoke(flightRecorder, "stopRecording", args, argTypes);
+            mBeanServerConnection.invoke(objectName, "stopRecording", args, argTypes);
         } catch (InstanceNotFoundException|MBeanException|ReflectionException e) {
             throw new JfrStreamingException(e.getMessage(), e);
         }
@@ -172,11 +169,11 @@ public class FlightRecorderConnection {
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws JfrStreamingException Wraps a {@code javax.management.JMException}.
      */
-    /* package-scoped */ void dumpRecording(long id, String outputFile) throws IOException, JfrStreamingException {
+    public void dumpRecording(long id, String outputFile) throws IOException, JfrStreamingException {
         try {
             Object[] args = new Object[]{id,outputFile};
             String[] argTypes =  new String[]{long.class.getName(),String.class.getName()};
-            connection.invoke(flightRecorder, "copyTo", args, argTypes);
+            mBeanServerConnection.invoke(objectName, "copyTo", args, argTypes);
         } catch (InstanceNotFoundException|MBeanException|ReflectionException e) {
             throw new JfrStreamingException(e.getMessage(), e);
         }
@@ -190,19 +187,20 @@ public class FlightRecorderConnection {
      * @param stop Whether to stop the cloned recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws JfrStreamingException Wraps a {@code javax.management.JMException}.
+     * @return id of the recording
      */
-    /* package-scoped */ long cloneRecording(long id, boolean stop) throws IOException, JfrStreamingException {
+    public long cloneRecording(long id, boolean stop) throws IOException, JfrStreamingException {
         try {
             Object[] args = new Object[]{id,stop};
             String[] argTypes =  new String[]{long.class.getName(),boolean.class.getName()};
-            return (long)connection.invoke(flightRecorder, "cloneRecording", args, argTypes);
+            return (long) mBeanServerConnection.invoke(objectName, "cloneRecording", args, argTypes);
         } catch (InstanceNotFoundException|MBeanException|ReflectionException e) {
             throw new JfrStreamingException(e.getMessage(), e);
         }
     }
 
     /**
-     * Get the Java Flight Recording as an {@code java.io.InputStream.
+     * Get the Java Flight Recording as an {@code java.io.InputStream}.
      * This method is called from the {@link Recording#getStream(Instant, Instant, long)} method.
      *
      * The recording may contain data outside the {@code startTime} and {@code endTime} parameters.
@@ -227,7 +225,7 @@ public class FlightRecorderConnection {
      * The cause may also be a {@code javax.management.openmbean.OpenDataException}
      * which indicates a bug in the code of this class.
      */
-    /* package-scoped */ InputStream getStream(long id, Instant startTime, Instant endTime, long blockSize)
+    public InputStream getStream(long id, Instant startTime, Instant endTime, long blockSize)
             throws IOException, JfrStreamingException {
         Map<String,String> options = new HashMap<>();
         if (startTime != null) options.put("startTime", startTime.toString());
@@ -238,8 +236,8 @@ public class FlightRecorderConnection {
             TabularData streamOptions = makeOpenData(options);
             Object[] args = new Object[]{id, streamOptions};
             String[] argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
-            long streamId = (long) connection.invoke(flightRecorder, "openStream", args, argTypes);
-            return new JfrStream(connection, flightRecorder, streamId);
+            long streamId = (long) mBeanServerConnection.invoke(objectName, "openStream", args, argTypes);
+            return new JfrStream(mBeanServerConnection, objectName, streamId);
         } catch(OpenDataException|InstanceNotFoundException|MBeanException|ReflectionException e) {
             throw new JfrStreamingException(e.getMessage(), e);
         }
@@ -253,23 +251,32 @@ public class FlightRecorderConnection {
      * a {@code javax.management.MBeanException} or a {@code javax.management.ReflectionException}
      * and indicates an issue with the FlightRecorderMXBean in the JVM.
      */
-    /* package-scoped */ void closeRecording(long id) throws IOException, JfrStreamingException {
+    public void closeRecording(long id) throws IOException, JfrStreamingException {
         try {
             Object[] args = new Object[]{id};
             String[] argTypes = new String[]{long.class.getName()};
-            connection.invoke(flightRecorder, "closeRecording", args, argTypes);
+            mBeanServerConnection.invoke(objectName, "closeRecording", args, argTypes);
         } catch (InstanceNotFoundException|MBeanException|ReflectionException e) {
-           throw new JfrStreamingException(e.getMessage(), e);
+            throw new JfrStreamingException(e.getMessage(), e);
         }
     }
 
-    private FlightRecorderConnection(MBeanServerConnection connection, ObjectName objectName) {
-        this.connection = connection;
-        this.flightRecorder = objectName;
+    /**
+     * Constructor is called from the static {@link FlightRecorderConnection#connect(MBeanServerConnection)}
+     * method, and from the {@link com.microsoft.jfr.dcmd.FlightRecorderDiagnosticCommandConnection#connect(MBeanServerConnection)}
+     * method. It is not possible to create a FlightRecorderConnection directly.
+     * @param mBeanServerConnection The connection to the MBeanServer.
+     * @param objectName The name of the MBean we are connected to.
+     */
+    protected FlightRecorderConnection(MBeanServerConnection mBeanServerConnection, ObjectName objectName) {
+        this.mBeanServerConnection = mBeanServerConnection;
+        this.objectName = objectName;
     }
 
-    private final MBeanServerConnection connection;
-    private final ObjectName flightRecorder;
+    /** The MBeanServerConnection. */
+    protected final MBeanServerConnection mBeanServerConnection;
+    /** The ObjectName of the MBean we are connecting to. */
+    protected final ObjectName objectName;
 
     /**
      * Convert the Map to TabularData
@@ -293,5 +300,4 @@ public class FlightRecorderConnection {
         }
         return table;
     }
-
 }
