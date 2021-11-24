@@ -14,6 +14,8 @@ as managing JFR across multiple JVMs, is not a goal of this project.
 
 ### Maven Coordinates
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.microsoft.jfr/jfr-streaming.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.microsoft.jfr%22%20AND%20a:%22jfr-streaming%22)
+
 ```xml
 <dependency>
   <groupId>com.microsoft.jfr</groupId>
