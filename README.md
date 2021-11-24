@@ -18,7 +18,7 @@ as managing JFR across multiple JVMs, is not a goal of this project.
 <dependency>
   <groupId>com.microsoft.jfr</groupId>
   <artifactId>jfr-streaming</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 
@@ -28,7 +28,7 @@ This example illustrates some of the API.
 
 ```java   
 ///usr/bin/env jbang "$0" "$@" ; exit $?
-//DEPS com.microsoft.jfr:jfr-streaming:1.1.0
+//DEPS com.microsoft.jfr:jfr-streaming:1.2.0
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
