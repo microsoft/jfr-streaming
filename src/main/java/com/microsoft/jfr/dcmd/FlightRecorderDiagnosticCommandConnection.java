@@ -106,6 +106,10 @@ public class FlightRecorderDiagnosticCommandConnection extends FlightRecorderCon
     @Override
     public long startRecording(RecordingOptions recordingOptions, RecordingConfiguration recordingConfiguration) throws JfrStreamingException {
 
+        if(recordingConfiguration instanceof RecordingConfiguration.MapConfiguration) {
+            throw new JfrStreamingException("Map configuration not available for " + FlightRecorderDiagnosticCommandConnection.class.getSimpleName() + ".");
+        }
+
         Object[] params = formOptions(recordingOptions, recordingConfiguration);
 
         // jfrStart returns "Started recording 2." and some more stuff, but all we care about is the name of the recording.

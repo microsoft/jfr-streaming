@@ -113,17 +113,10 @@ public class FlightRecorderConnection {
             String[] argTypes = new String[]{};
             final long id = (long) mBeanServerConnection.invoke(objectName, "newRecording", args, argTypes);
 
-            if (recordingConfiguration != null) {
-                String configuration = recordingConfiguration.getConfiguration();
-                if (configuration != null && configuration.trim().length() > 0) {
-                    args = new Object[]{id, configuration};
-                    argTypes = new String[]{long.class.getName(), String.class.getName()};
-                    mBeanServerConnection.invoke(objectName, recordingConfiguration.getMbeanSetterFunction(), args, argTypes);
-                }
-            }
+            setConfiguration(recordingConfiguration, id);
 
             if (recordingOptions != null) {
-                Map<String,String> options = recordingOptions.getRecordingOptions();
+                Map<String, String> options = recordingOptions.getRecordingOptions();
                 if (options != null && !options.isEmpty()) {
                     TabularData recordingOptionsParam = makeOpenData(options);
                     args = new Object[]{id, recordingOptionsParam};
@@ -140,6 +133,30 @@ public class FlightRecorderConnection {
         } catch (OpenDataException |InstanceNotFoundException| MBeanException | ReflectionException e) {
             // In theory, we should never get these.
             throw new JfrStreamingException(e.getMessage(), e);
+        }
+    }
+
+    private void setConfiguration(RecordingConfiguration recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+        if (recordingConfiguration == null || recordingConfiguration.getConfiguration() == null) {
+            return;
+        }
+
+        if (recordingConfiguration instanceof RecordingConfiguration.MapConfiguration) {
+            Map<String, String> configuration = (Map) recordingConfiguration.getConfiguration();
+            if (!configuration.isEmpty()) {
+                TabularData configAsTabular = makeOpenData(configuration);
+                Object[] args = new Object[]{id, configAsTabular};
+                String[] argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
+                mBeanServerConnection.invoke(objectName, recordingConfiguration.getMbeanSetterFunction(), args, argTypes);
+            }
+        } else {
+            String configuration = (String) recordingConfiguration.getConfiguration();
+            if (configuration.trim().length() > 0) {
+                Object[] args = new Object[]{id, configuration};
+                String[] argTypes = new String[]{long.class.getName(), String.class.getName()};
+                mBeanServerConnection.invoke(objectName, recordingConfiguration.getMbeanSetterFunction(), args, argTypes);
+            }
+
         }
     }
 
