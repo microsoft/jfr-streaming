@@ -81,7 +81,7 @@ public abstract class RecordingConfiguration<C> {
     }
 
     /**
-     * A confiration defined from a map.
+     * A configuration defined from a map.
      */
     public static class MapConfiguration extends RecordingConfiguration<Map<String, String>> {
 
