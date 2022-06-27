@@ -101,7 +101,7 @@ public class RecordingConfigurationTest {
             try {
                 return JfrLoaderToolkit.loadEvents(dumpFile.toFile());
             } catch (CouldNotLoadRecordingException e) {
-                return null;
+                fail("Unable to load JFR data: ", e);
             }
 
         } catch (IllegalArgumentException badData) {
