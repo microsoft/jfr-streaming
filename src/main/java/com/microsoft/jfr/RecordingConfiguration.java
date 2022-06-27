@@ -5,11 +5,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
  * A flight recorder configuration controls the amount of data that is collected.
+ * @param <C> Recording configuration type
  */
 public abstract class RecordingConfiguration<C> {
 
