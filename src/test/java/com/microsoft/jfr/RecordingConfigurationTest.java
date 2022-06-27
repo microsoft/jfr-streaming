@@ -47,7 +47,8 @@ public class RecordingConfigurationTest {
 
     @Test
     public void jfcFileFromInputStreamCanBeRead() {
-        executeRecording("sampleJfcFile.jfc");
+        IItemCollection recordingContent = executeRecording("sampleJfcFile.jfc");
+        assertTrue(containsEvent(recordingContent, "jdk.ThreadAllocationStatistics"));
     }
 
     @Test
@@ -76,9 +77,9 @@ public class RecordingConfigurationTest {
         return false;
     }
 
-    private void executeRecording(String configFile) {
+    private IItemCollection executeRecording(String configFile) {
         RecordingConfiguration.JfcFileConfiguration configuration = new RecordingConfiguration.JfcFileConfiguration(RecordingConfigurationTest.class.getClassLoader().getResourceAsStream(configFile));
-        excecuteRecordingWithConfig(configuration);
+        return excecuteRecordingWithConfig(configuration);
     }
 
     private IItemCollection excecuteRecordingWithConfig(RecordingConfiguration configuration) {
