@@ -1,21 +1,8 @@
 package com.microsoft.jfr;
 
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanException;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-import javax.management.ReflectionException;
-import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.CompositeDataSupport;
-import javax.management.openmbean.CompositeType;
+import javax.management.*;
 import javax.management.openmbean.OpenDataException;
-import javax.management.openmbean.OpenType;
-import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularData;
-import javax.management.openmbean.TabularDataSupport;
-import javax.management.openmbean.TabularType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
@@ -105,7 +92,7 @@ public class FlightRecorderConnection {
      * The cause may also be a {@code javax.management.openmbean.OpenDataException}
      * which indicates a bug in the code of this class.
      */
-    public long startRecording(RecordingOptions recordingOptions, RecordingConfiguration<?> recordingConfiguration)
+    public long startRecording(RecordingOptions recordingOptions, RecordingConfiguration recordingConfiguration)
             throws IOException, JfrStreamingException {
 
         try {
@@ -118,7 +105,7 @@ public class FlightRecorderConnection {
             if (recordingOptions != null) {
                 Map<String, String> options = recordingOptions.getRecordingOptions();
                 if (options != null && !options.isEmpty()) {
-                    TabularData recordingOptionsParam = makeOpenData(options);
+                    TabularData recordingOptionsParam = OpenDataUtils.makeOpenData(options);
                     args = new Object[]{id, recordingOptionsParam};
                     argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
                     mBeanServerConnection.invoke(objectName, "setRecordingOptions", args, argTypes);
@@ -136,34 +123,21 @@ public class FlightRecorderConnection {
         }
     }
 
-    private void setOptions(RecordingConfiguration<?> recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+    private void setOptions(RecordingConfiguration recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
         if (recordingConfiguration != null) {
             setConfiguration(recordingConfiguration, id);
         }
     }
 
-    private void setConfiguration(RecordingConfiguration<?> recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+    private void setConfiguration(RecordingConfiguration recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
 
         assert recordingConfiguration != null;
 
-        if (recordingConfiguration instanceof RecordingConfiguration.MapConfiguration) {
-            Map<String, String> configuration = (Map) recordingConfiguration.getConfiguration();
-            if (!configuration.isEmpty()) {
-                TabularData configAsTabular = makeOpenData(configuration);
-                Object[] args = new Object[]{id, configAsTabular};
-                String[] argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
-                mBeanServerConnection.invoke(objectName, recordingConfiguration.getMbeanSetterFunction(), args, argTypes);
-            }
-        } else {
-            String configuration = (String) recordingConfiguration.getConfiguration();
-            if (configuration.trim().length() > 0) {
-                Object[] args = new Object[]{id, configuration};
-                String[] argTypes = new String[]{long.class.getName(), String.class.getName()};
-                mBeanServerConnection.invoke(objectName, recordingConfiguration.getMbeanSetterFunction(), args, argTypes);
-            }
+        recordingConfiguration.invokeSetConfiguration(id, mBeanServerConnection, objectName);
 
-        }
     }
+
+
 
     /**
      * Stop a recording. This method is called from the {@link Recording#stop()} method.
@@ -255,7 +229,7 @@ public class FlightRecorderConnection {
         if (blockSize > 0)     options.put("blockSize", Long.toString(blockSize));
 
         try {
-            TabularData streamOptions = makeOpenData(options);
+            TabularData streamOptions = OpenDataUtils.makeOpenData(options);
             Object[] args = new Object[]{id, streamOptions};
             String[] argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
             long streamId = (long) mBeanServerConnection.invoke(objectName, "openStream", args, argTypes);
@@ -299,27 +273,4 @@ public class FlightRecorderConnection {
     protected final MBeanServerConnection mBeanServerConnection;
     /** The ObjectName of the MBean we are connecting to. */
     protected final ObjectName objectName;
-
-    /**
-     * Convert the Map to TabularData
-     * @param options A map of key-value pairs.
-     * @return TabularData
-     * @throws OpenDataException Can only be raised if there is a bug in this code.
-     */
-    private static TabularData makeOpenData(final Map<String, String> options) throws OpenDataException {
-        // Copied from newrelic-jfr-core
-        final String typeName = "java.util.Map<java.lang.String, java.lang.String>";
-        final String[] itemNames = new String[]{"key", "value"};
-        final OpenType<?>[] openTypes = new OpenType[]{SimpleType.STRING, SimpleType.STRING};
-        final CompositeType rowType = new CompositeType(typeName, typeName, itemNames, itemNames, openTypes);
-        final TabularType tabularType = new TabularType(typeName, typeName, rowType, new String[]{"key"});
-        final TabularDataSupport table = new TabularDataSupport(tabularType);
-
-        for (Map.Entry<String, String> entry : options.entrySet()) {
-            Object[] itemValues = {entry.getKey(), entry.getValue()};
-            CompositeData element = new CompositeDataSupport(rowType, itemNames, itemValues);
-            table.put(element);
-        }
-        return table;
-    }
 }

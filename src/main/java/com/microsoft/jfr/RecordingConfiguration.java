@@ -1,17 +1,19 @@
 package com.microsoft.jfr;
 
+import javax.management.*;
+import javax.management.openmbean.OpenDataException;
+import javax.management.openmbean.TabularData;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
  * A flight recorder configuration controls the amount of data that is collected.
- * @param <C> Recording configuration type
  */
-public abstract class RecordingConfiguration<C> {
+public abstract class RecordingConfiguration {
 
     /**
      * Convenience for selecting the pre-defined 'default' configuration that is standard with the JDK.
@@ -31,10 +33,12 @@ public abstract class RecordingConfiguration<C> {
      * A pre-defined configuration is one which you could select with the 'settings' option
      * of the JVM option 'StartFlightRecording', for example {@code -XX:StartFlightRecording:settings=default.jfc}.
      */
-    public static class PredefinedConfiguration extends RecordingConfiguration<String> {
+    public static class PredefinedConfiguration extends RecordingConfiguration {
+        private final String configurationName;
+
         @Override
-        public String getMbeanSetterFunction() {
-            return "setPredefinedConfiguration";
+        void invokeSetConfiguration(long id, MBeanServerConnection mBeanServerConnection, ObjectName objectName) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+            invokeSetConfiguration(configurationName, "setPredefinedConfiguration", id, mBeanServerConnection, objectName);
         }
 
         /**
@@ -44,15 +48,21 @@ public abstract class RecordingConfiguration<C> {
          * @throws NullPointerException if predefinedConfiguration is {@code null}
          */
         public PredefinedConfiguration(String configurationName) {
-            super(configurationName);
+            this.configurationName = configurationName;
         }
 
+        @Override
+        public String toString() {
+            return configurationName;
+        }
     }
 
     /**
      * A configuration that is read from a jfc file
      */
-    public static class JfcFileConfiguration extends RecordingConfiguration<String> {
+    public static class JfcFileConfiguration extends RecordingConfiguration {
+
+        private final String configuration;
 
         /**
          * Sets a configuration from a jfc file to use with a {@code Recording}.
@@ -61,7 +71,7 @@ public abstract class RecordingConfiguration<C> {
          * @throws NullPointerException if predefinedConfiguration is {@code null}
          */
         public JfcFileConfiguration(InputStream configurationFile) {
-            super(readConfigurationFile(configurationFile));
+           this.configuration = readConfigurationFile(configurationFile);
         }
 
         private static String readConfigurationFile(InputStream inputStream) {
@@ -75,15 +85,22 @@ public abstract class RecordingConfiguration<C> {
         }
 
         @Override
-        public String getMbeanSetterFunction() {
-            return "setConfiguration";
+        void invokeSetConfiguration(long id, MBeanServerConnection mBeanServerConnection, ObjectName objectName) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+            invokeSetConfiguration(configuration, "setConfiguration", id, mBeanServerConnection, objectName);
+        }
+
+        @Override
+        public String toString() {
+            return configuration;
         }
     }
 
     /**
      * A configuration defined from a map.
      */
-    public static class MapConfiguration extends RecordingConfiguration<Map<String, String>> {
+    public static class MapConfiguration extends RecordingConfiguration {
+
+        private final Map<String, String> configuration;
 
         /**
          * Sets a configuration from a Map
@@ -91,41 +108,32 @@ public abstract class RecordingConfiguration<C> {
          *                      For example: {jdk.ObjectAllocationInNewTLAB#enabled=true, jdk.ObjectAllocationOutsideTLAB#enabled=true}
          */
         public MapConfiguration(Map<String, String> configuration) {
-            super(configuration);
+            this.configuration = configuration;
         }
 
         @Override
-        public String getMbeanSetterFunction() {
-            return "setRecordingSettings";
+        void invokeSetConfiguration(long id, MBeanServerConnection mBeanServerConnection, ObjectName objectName) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException, OpenDataException {
+            if (!configuration.isEmpty()) {
+                TabularData configAsTabular = OpenDataUtils.makeOpenData(configuration);
+                Object[] args = new Object[]{id, configAsTabular};
+                String[] argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
+                mBeanServerConnection.invoke(objectName, "setRecordingSettings", args, argTypes);
+            }
         }
 
+        @Override
+        public String toString() {
+            return configuration.toString();
+        }
     }
 
-    /**
-     * Get the setter function on the FlightRecorder mbean that receives this configuration type
-     * @return The setter function on the FlightRecorder mbean that receives this configuration type
-     */
-    public abstract String getMbeanSetterFunction();
+    abstract void invokeSetConfiguration(long id, MBeanServerConnection mBeanServerConnection, ObjectName objectName) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException, OpenDataException;
 
-    /**
-     * Sets a configuration to use with a {@code Recording}.
-     * @param configuration The value of the configuration, not {@code null}.
-     * @throws NullPointerException if configuration is {@code null}
-     */
-    public RecordingConfiguration(C configuration) {
-        Objects.requireNonNull(configuration, "configuration cannot be null");
-        this.configuration = configuration;
+    static void invokeSetConfiguration(String configurationName, String getMbeanSetterFunction, long id, MBeanServerConnection mBeanServerConnection, ObjectName objectName) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+        if (configurationName.trim().length() > 0) {
+            Object[] args = new Object[]{id, configurationName};
+            String[] argTypes = new String[]{long.class.getName(), String.class.getName()};
+            mBeanServerConnection.invoke(objectName, getMbeanSetterFunction, args, argTypes);
+        }
     }
-
-    /**
-     * Get the recording configuration.
-     * @return The recording configuration.
-     */
-    public C getConfiguration() {
-        return configuration;
-    }
-
-    /** The configuration name or file contents. */
-    protected final C configuration;
-
 }

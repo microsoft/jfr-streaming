@@ -140,7 +140,7 @@ public class FlightRecorderDiagnosticCommandConnection extends FlightRecorderCon
         }
 
         List<String> settings = Collections.singletonList(
-                "settings=" + recordingConfiguration.getConfiguration()
+                "settings=" + recordingConfiguration
         );
 
         List<String> params = new ArrayList<>();
