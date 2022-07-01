@@ -100,17 +100,9 @@ public class FlightRecorderConnection {
             String[] argTypes = new String[]{};
             final long id = (long) mBeanServerConnection.invoke(objectName, "newRecording", args, argTypes);
 
-            setOptions(recordingConfiguration, id);
+            setConfiguration(recordingConfiguration, id);
 
-            if (recordingOptions != null) {
-                Map<String, String> options = recordingOptions.getRecordingOptions();
-                if (options != null && !options.isEmpty()) {
-                    TabularData recordingOptionsParam = OpenDataUtils.makeOpenData(options);
-                    args = new Object[]{id, recordingOptionsParam};
-                    argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
-                    mBeanServerConnection.invoke(objectName, "setRecordingOptions", args, argTypes);
-                }
-            }
+            setOptions(recordingOptions, id);
 
             args = new Object[]{id};
             argTypes = new String[]{long.class.getName()};
@@ -123,7 +115,21 @@ public class FlightRecorderConnection {
         }
     }
 
-    private void setOptions(RecordingConfiguration recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+    private void setOptions(RecordingOptions recordingOptions, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+        String[] argTypes;
+        Object[] args;
+        if (recordingOptions != null) {
+            Map<String, String> options = recordingOptions.getRecordingOptions();
+            if (options != null && !options.isEmpty()) {
+                TabularData recordingOptionsParam = OpenDataUtils.makeOpenData(options);
+                args = new Object[]{id, recordingOptionsParam};
+                argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
+                mBeanServerConnection.invoke(objectName, "setRecordingOptions", args, argTypes);
+            }
+        }
+    }
+
+    private void setConfiguration(RecordingConfiguration recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
         if (recordingConfiguration != null) {
             recordingConfiguration.invokeSetConfiguration(id, mBeanServerConnection, objectName);
         }
