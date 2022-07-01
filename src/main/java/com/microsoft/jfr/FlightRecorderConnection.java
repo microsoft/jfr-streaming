@@ -1,5 +1,11 @@
 package com.microsoft.jfr;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanException;
 import javax.management.MBeanServerConnection;
@@ -7,21 +13,8 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
-import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.CompositeDataSupport;
-import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.OpenDataException;
-import javax.management.openmbean.OpenType;
-import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularData;
-import javax.management.openmbean.TabularDataSupport;
-import javax.management.openmbean.TabularType;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * Represents a connection to a {@code jdk.management.jfr.FlightRecorderMXBean} of a JVM.
@@ -94,9 +87,9 @@ public class FlightRecorderConnection {
      * Start a recording. This method creates a new recording, sets the configuration, and then starts the recording.
      * This method is called from the {@link Recording#start()} method.
      * @param recordingOptions The {@code RecordingOptions} which was passed to
-     *                         the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method
+     *                         the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method. {@code null} is allowed.
      * @param recordingConfiguration The {@code RecordingConfiguration} which was passed to
-     *                          the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method
+     *                          the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method. {@code null} is allowed.
      * @return The id of the recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws JfrStreamingException Wraps an {@code javax.management.InstanceNotFoundException},
@@ -114,22 +107,11 @@ public class FlightRecorderConnection {
             final long id = (long) mBeanServerConnection.invoke(objectName, "newRecording", args, argTypes);
 
             if (recordingConfiguration != null) {
-                String configuration = recordingConfiguration.getConfiguration();
-                if (configuration != null && configuration.trim().length() > 0) {
-                    args = new Object[]{id, configuration};
-                    argTypes = new String[]{long.class.getName(), String.class.getName()};
-                    mBeanServerConnection.invoke(objectName, recordingConfiguration.getMbeanSetterFunction(), args, argTypes);
-                }
+                setConfiguration(recordingConfiguration, id);
             }
 
             if (recordingOptions != null) {
-                Map<String,String> options = recordingOptions.getRecordingOptions();
-                if (options != null && !options.isEmpty()) {
-                    TabularData recordingOptionsParam = makeOpenData(options);
-                    args = new Object[]{id, recordingOptionsParam};
-                    argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
-                    mBeanServerConnection.invoke(objectName, "setRecordingOptions", args, argTypes);
-                }
+                setOptions(recordingOptions, id);
             }
 
             args = new Object[]{id};
@@ -141,6 +123,20 @@ public class FlightRecorderConnection {
             // In theory, we should never get these.
             throw new JfrStreamingException(e.getMessage(), e);
         }
+    }
+
+    private void setOptions(RecordingOptions recordingOptions, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+        Map<String, String> options = recordingOptions.getRecordingOptions();
+        if (options != null && !options.isEmpty()) {
+            TabularData recordingOptionsParam = OpenDataUtils.makeOpenData(options);
+            Object[] args = new Object[]{id, recordingOptionsParam};
+            String[]  argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
+            mBeanServerConnection.invoke(objectName, "setRecordingOptions", args, argTypes);
+        }
+    }
+
+    private void setConfiguration(RecordingConfiguration recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+        recordingConfiguration.invokeSetConfiguration(id, mBeanServerConnection, objectName);
     }
 
     /**
@@ -233,7 +229,7 @@ public class FlightRecorderConnection {
         if (blockSize > 0)     options.put("blockSize", Long.toString(blockSize));
 
         try {
-            TabularData streamOptions = makeOpenData(options);
+            TabularData streamOptions = OpenDataUtils.makeOpenData(options);
             Object[] args = new Object[]{id, streamOptions};
             String[] argTypes = new String[]{long.class.getName(), TabularData.class.getName()};
             long streamId = (long) mBeanServerConnection.invoke(objectName, "openStream", args, argTypes);
@@ -277,27 +273,4 @@ public class FlightRecorderConnection {
     protected final MBeanServerConnection mBeanServerConnection;
     /** The ObjectName of the MBean we are connecting to. */
     protected final ObjectName objectName;
-
-    /**
-     * Convert the Map to TabularData
-     * @param options A map of key-value pairs.
-     * @return TabularData
-     * @throws OpenDataException Can only be raised if there is a bug in this code.
-     */
-    private static TabularData makeOpenData(final Map<String, String> options) throws OpenDataException {
-        // Copied from newrelic-jfr-core
-        final String typeName = "java.util.Map<java.lang.String, java.lang.String>";
-        final String[] itemNames = new String[]{"key", "value"};
-        final OpenType<?>[] openTypes = new OpenType[]{SimpleType.STRING, SimpleType.STRING};
-        final CompositeType rowType = new CompositeType(typeName, typeName, itemNames, itemNames, openTypes);
-        final TabularType tabularType = new TabularType(typeName, typeName, rowType, new String[]{"key"});
-        final TabularDataSupport table = new TabularDataSupport(tabularType);
-
-        for (Map.Entry<String, String> entry : options.entrySet()) {
-            Object[] itemValues = {entry.getKey(), entry.getValue()};
-            CompositeData element = new CompositeDataSupport(rowType, itemNames, itemValues);
-            table.put(element);
-        }
-        return table;
-    }
 }
