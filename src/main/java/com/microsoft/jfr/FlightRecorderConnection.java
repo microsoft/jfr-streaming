@@ -81,9 +81,9 @@ public class FlightRecorderConnection {
      * Start a recording. This method creates a new recording, sets the configuration, and then starts the recording.
      * This method is called from the {@link Recording#start()} method.
      * @param recordingOptions The {@code RecordingOptions} which was passed to
-     *                         the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method. Null is allowed.
+     *                         the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method. {@code null} is allowed.
      * @param recordingConfiguration The {@code RecordingConfiguration} which was passed to
-     *                          the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method. Null is allowed.
+     *                          the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method. {@code null} is allowed.
      * @return The id of the recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws JfrStreamingException Wraps an {@code javax.management.InstanceNotFoundException},
@@ -125,19 +125,9 @@ public class FlightRecorderConnection {
 
     private void setOptions(RecordingConfiguration recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
         if (recordingConfiguration != null) {
-            setConfiguration(recordingConfiguration, id);
+            recordingConfiguration.invokeSetConfiguration(id, mBeanServerConnection, objectName);
         }
     }
-
-    private void setConfiguration(RecordingConfiguration recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
-
-        assert recordingConfiguration != null;
-
-        recordingConfiguration.invokeSetConfiguration(id, mBeanServerConnection, objectName);
-
-    }
-
-
 
     /**
      * Stop a recording. This method is called from the {@link Recording#stop()} method.
