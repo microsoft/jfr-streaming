@@ -1,14 +1,20 @@
 package com.microsoft.jfr;
 
-import javax.management.*;
-import javax.management.openmbean.OpenDataException;
-import javax.management.openmbean.TabularData;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanException;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+import javax.management.ReflectionException;
+import javax.management.openmbean.OpenDataException;
+import javax.management.openmbean.TabularData;
 
 /**
  * Represents a connection to a {@code jdk.management.jfr.FlightRecorderMXBean} of a JVM.
