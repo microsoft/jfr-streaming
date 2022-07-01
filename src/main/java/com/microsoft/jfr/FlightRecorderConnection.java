@@ -94,9 +94,9 @@ public class FlightRecorderConnection {
      * Start a recording. This method creates a new recording, sets the configuration, and then starts the recording.
      * This method is called from the {@link Recording#start()} method.
      * @param recordingOptions The {@code RecordingOptions} which was passed to
-     *                         the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method
+     *                         the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method. Null is allowed.
      * @param recordingConfiguration The {@code RecordingConfiguration} which was passed to
-     *                          the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method
+     *                          the {@link #newRecording(RecordingOptions, RecordingConfiguration)} method. Null is allowed.
      * @return The id of the recording.
      * @throws IOException A communication problem occurred when talking to the MBean server.
      * @throws JfrStreamingException Wraps an {@code javax.management.InstanceNotFoundException},
@@ -105,7 +105,7 @@ public class FlightRecorderConnection {
      * The cause may also be a {@code javax.management.openmbean.OpenDataException}
      * which indicates a bug in the code of this class.
      */
-    public long startRecording(RecordingOptions recordingOptions, RecordingConfiguration recordingConfiguration)
+    public long startRecording(RecordingOptions recordingOptions, RecordingConfiguration<?> recordingConfiguration)
             throws IOException, JfrStreamingException {
 
         try {
@@ -113,7 +113,7 @@ public class FlightRecorderConnection {
             String[] argTypes = new String[]{};
             final long id = (long) mBeanServerConnection.invoke(objectName, "newRecording", args, argTypes);
 
-            setConfiguration(recordingConfiguration, id);
+            setOptions(recordingConfiguration, id);
 
             if (recordingOptions != null) {
                 Map<String, String> options = recordingOptions.getRecordingOptions();
@@ -136,10 +136,15 @@ public class FlightRecorderConnection {
         }
     }
 
-    private void setConfiguration(RecordingConfiguration recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
-        if (recordingConfiguration == null || recordingConfiguration.getConfiguration() == null) {
-            return;
+    private void setOptions(RecordingConfiguration<?> recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+        if (recordingConfiguration != null) {
+            setConfiguration(recordingConfiguration, id);
         }
+    }
+
+    private void setConfiguration(RecordingConfiguration<?> recordingConfiguration, long id) throws OpenDataException, InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+
+        assert recordingConfiguration != null;
 
         if (recordingConfiguration instanceof RecordingConfiguration.MapConfiguration) {
             Map<String, String> configuration = (Map) recordingConfiguration.getConfiguration();
