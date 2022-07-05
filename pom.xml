@@ -7,7 +7,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.microsoft.jfr</groupId>
-  <artifactId>jfr-streaming</artifactId>
+  <artifactId>microsoft-jfr</artifactId>
+  <packaging>pom</packaging>
   <version>1.2.1-SNAPSHOT</version>
 
   <name>Java Flight Recorder Streaming Library</name>
@@ -78,6 +79,10 @@
       </build>
     </profile>
   </profiles>
+
+  <modules>
+    <module>core</module>
+  </modules>
   
   <properties>
     <maven.compiler.source>8</maven.compiler.source>
@@ -87,7 +92,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <dependencies>
+  <dependencyManagement>
+   <dependencies>
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
@@ -106,7 +112,8 @@
       <version>8.2.0</version>
       <scope>test</scope>
     </dependency>
-  </dependencies>
+   </dependencies>
+  </dependencyManagement>
 
   <build>
     <plugins>

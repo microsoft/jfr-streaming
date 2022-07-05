@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!--
+ Copyright (c) Microsoft Corporation. All rights reserved.
+ Licensed under the MIT License. See LICENSE in the project root for
+ license information.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.microsoft.jfr</groupId>
+    <artifactId>microsoft-jfr</artifactId>
+    <version>1.2.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>jfr-streaming</artifactId>
+  <name>JFR Streaming Core</name>
+  <description>Core implemenation of a portable API for accessing JFR.</description>
+  <url>${project.parent.url}</url>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-testng</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmc</groupId>
+      <artifactId>flightrecorder</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>
