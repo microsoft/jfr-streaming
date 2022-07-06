@@ -9,7 +9,7 @@
   <groupId>com.microsoft.jfr</groupId>
   <artifactId>microsoft-jfr</artifactId>
   <packaging>pom</packaging>
-  <version>1.2.3-SNAPSHOT</version>
+  <version>1.2.1-SNAPSHOT</version>
 
   <name>Java Flight Recorder Streaming Library</name>
   <description>A library for streaming JFR files via the FlightRecorderMXBean</description>
