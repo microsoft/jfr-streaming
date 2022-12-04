@@ -130,10 +130,11 @@
 
   <dependencyManagement>
    <dependencies>
+    <!-- 7.5 is the last Java 8 supported version -->
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
-      <version>7.6.1</version>
+      <version>7.5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
