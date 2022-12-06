@@ -41,8 +41,14 @@ target/
 .idea/
 *.iml
 
+# jenv
+.java-version
+
 # Uncomment if you have tasks that create the project's static files in wwwroot
 #wwwroot/
+
+# VS Code
+.vscode/
 
 # Visual Studio 2017 auto generated files
 Generated\ Files/
