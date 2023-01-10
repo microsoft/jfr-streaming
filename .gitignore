@@ -32,6 +32,8 @@ bld/
 [Ll]ogs/
 
 # Maven build
+.mvn/wrapper/maven-wrapper.jar
+default.profraw
 target/
 
 # Visual Studio 2015/2017 cache/options directory
